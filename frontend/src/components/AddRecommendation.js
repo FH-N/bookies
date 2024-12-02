@@ -1,5 +1,5 @@
 function AddRecommendation(){
     return(
-        <div>AddRecommendations</div>
+        <div>AddRecommendation</div>
     )
 }
