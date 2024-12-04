@@ -1,0 +1,3 @@
+GOOGLE_BOOKS_API_KEY= "AIzaSyCo4zwk8nOGKyX_nWHapxR0ClInR-bxIcY"
+CLIENT_ID="647782188619-f8k98siiqs3k8cso68jlndom8oak5ata.apps.googleusercontent.com"
+CLIENT_SECRET="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"

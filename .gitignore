@@ -1,2 +1,2 @@
 node_modules/
-google/credentials.py
+bookies/googlebooks/credentials.py
