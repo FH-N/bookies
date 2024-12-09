@@ -2,9 +2,9 @@ import AuthPage from "./AuthPage";
 
 const LandingPage = ({ initialMethod }) => {
   return (
-    <div className="container w-full h-min-screen mt-16">
-      <div className="flex flex-row items-center justify-center">
-        <div className="w-1/2 h-full text-white">
+    <div className="container w-full h-min-screen mt-8">
+      <div className="flex flex-row">
+        <div className="w-1/2 text-white flex flex-col items-center justify-center">
           <div className=" font-poppins font-bold text-6xl text-wrap p-3">
             <span className="text-aqua-teal">Discover</span>,
             <span className="text-lemon-lime"> Share</span>,
@@ -16,9 +16,8 @@ const LandingPage = ({ initialMethod }) => {
             recommendations, and track your reading journey—all in one place.
           </p>
         </div>
-        <div className="w-1/2 bg-yellow-400 h-full">
+        <div className="w-1/2 p-3 g-red-300">
           <AuthPage initialMethod={initialMethod} />
-          <h1>hi</h1>
         </div>
       </div>
     </div>

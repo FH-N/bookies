@@ -17,7 +17,11 @@ const App = () => {
   const { isAuthorized } = useAuthentication();
 
   const ConditionalHome = () => {
-    return isAuthorized ? <HomePage /> : <LandingPage />;
+    return isAuthorized ? (
+      <HomePage />
+    ) : (
+      <LandingPage initialMethod="register" />
+    );
   };
 
   const ProtectedLogin = () => {

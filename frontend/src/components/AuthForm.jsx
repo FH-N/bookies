@@ -69,7 +69,7 @@ const AuthForm = ({ route, method }) => {
       {!loading && (
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col justify-center items-center rounded-xl bg-white text-deep-purple h-3/4"
+          className="flex flex-col justify-center items-center rounded-xl bg-white text-deep-purple h-3/4 w-3/4"
         >
           <h2 className="font-poppins text-xl p-2 ">
             {method === "register" ? "Sign Up & Explore" : "Login & Explore"}
@@ -125,7 +125,7 @@ const AuthForm = ({ route, method }) => {
             <h1 className="flex items-center justify-center text-xl">Or</h1>
             <Button
               type="button"
-              className="bg-pink-flower hover:bg-light-purple"
+              className="bg-pink-flower hover:bg-light-purple hover:text-white"
               onClick={handleGoogleLogin}
             >
               {/* <img src={google} alt="Google icon" className="google-icon" /> */}
@@ -139,7 +139,7 @@ const AuthForm = ({ route, method }) => {
             <p className="pt-2">
               Don't have an account?
               <span
-                className="font-semibold p-1 text-deep-purple"
+                className="font-semibold p-1 text-deep-purple cursor-pointer"
                 onClick={() => navigate("/register")}
               >
                 Register
@@ -150,7 +150,7 @@ const AuthForm = ({ route, method }) => {
             <p className="toggle-text">
               Already have an account?
               <span
-                className="font-semibold p-1 text-deep-purple"
+                className="font-semibold p-1 text-deep-purple cursor-pointer"
                 onClick={() => navigate("/login")}
               >
                 Login
