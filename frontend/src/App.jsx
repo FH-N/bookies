@@ -4,7 +4,7 @@ import { useAuthentication } from "./auth";
 //Import Pages
 import BookSearch from "./pages/SearchPage";
 import BookInfo from "./components/BookInfo";
-import RecommendationPage from "./pages/recommendation";
+import RecommendationPage from "./pages/RecommendationPage";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import NavBar from "./components/ui/Navbar";
