@@ -8,7 +8,7 @@ const AuthForm = ({ route, method }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("reader");
+  // const [role, setRole] = useState("reader");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sucess, setSucess] = useState(null);
@@ -22,9 +22,9 @@ const AuthForm = ({ route, method }) => {
 
     try {
       const payload = { username, password, email  };
-      if (method === "register") {
-        payload.role = role; 
-      }
+      // if (method === "register") {
+      //   payload.role = role; 
+      // }
 
       const res = await api.post(route, payload);
 
@@ -111,7 +111,7 @@ const AuthForm = ({ route, method }) => {
                   required
                 />
               </div>
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label>Role:</label>
                 <div className="role-options">
                   <label>
@@ -135,7 +135,7 @@ const AuthForm = ({ route, method }) => {
                     Author
                   </label>
                 </div>
-              </div>
+              </div> */}
             </>
           )}
           <button type="submit" className="form-button">

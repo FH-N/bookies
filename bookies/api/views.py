@@ -23,7 +23,6 @@ from .serializers import ReviewSerializer, UserSerializer, BookClubSerializer, B
 
 User = get_user_model()
 
-
 class UserCreate(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -34,8 +33,6 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
     
 
 @login_required

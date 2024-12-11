@@ -1,20 +1,19 @@
 from rest_framework import serializers
 from .models import Review , User, BookClub, BookClubMembership, BookClubDiscussion
-from django.contrib.auth.models import User
 
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'user_type', 'password']
+        fields = ['id', 'username', 'email', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User(
             username=validated_data['username'],
             email=validated_data['email'],
-            user_type=validated_data.get('user_type', 'reader'),
+            # user_type=validated_data.get('user_type', 'reader'),
         )
         user.set_password(validated_data['password'])  
         user.save()

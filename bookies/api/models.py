@@ -1,27 +1,14 @@
 from django.db import models
-from django.contrib.auth.models import User,AbstractUser,Group, Permission
+from django.contrib.auth.models import User,AbstractUser
 from django.utils.text import slugify
 from django.contrib.auth.hashers import make_password , check_password
 
-class User(AbstractUser):
-    USER_TYPE_CHOICES = (
-        ('author', 'Author'),
-        ('reader', 'Reader'),
-    )
-
-    user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='reader')
-    bio = models.TextField(blank=True, null=True)
-
-    groups = models.ManyToManyField(
-        Group,
-        related_name="custom_user_set",  # Avoid clash with the default 'user_set'
-        blank=True,
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name="custom_user_permissions",  # Avoid clash with the default 'user_set'
-        blank=True,
-    )
+# class User(AbstractUser):
+#     user_type = models.CharField(
+#         max_length=10,
+#         choices=[('reader', 'Reader'), ('author', 'Author')],
+#         default='reader',
+#     )
 
 class Book(models.Model):
     title = models.CharField(max_length=255)
