@@ -7,6 +7,8 @@ import google from "../assets/google.png";
 const AuthForm = ({ route, method }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("reader");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sucess, setSucess] = useState(null);
@@ -19,7 +21,12 @@ const AuthForm = ({ route, method }) => {
     setSucess(null);
 
     try {
-      const res = await api.post(route, { username, password });
+      const payload = { username, password, email  };
+      if (method === "register") {
+        payload.role = role; 
+      }
+
+      const res = await api.post(route, payload);
 
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
@@ -38,7 +45,7 @@ const AuthForm = ({ route, method }) => {
         if (error.response.status === 401) {
           setError("Invalid credentials");
         } else if (error.response.status === 400) {
-          setError("Username already exists");
+          setError("Username or email already exists");
         } else {
           setError("Something went wrong. Please try again.");
         }
@@ -92,6 +99,45 @@ const AuthForm = ({ route, method }) => {
               required
             />
           </div>
+          {method === "register" && (
+            <>
+              <div className="form-group">
+                <label htmlFor="email">Email:</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Role:</label>
+                <div className="role-options">
+                  <label>
+                    <input
+                      type="radio"
+                      name="role"
+                      value="reader"
+                      checked={role === "reader"}
+                      onChange={() => setRole("reader")}
+                    />
+                    Reader
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="role"
+                      value="author"
+                      checked={role === "author"}
+                      onChange={() => setRole("author")}
+                    />
+                    Author
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
           <button type="submit" className="form-button">
             {method === "register" ? "Register" : "Login"}
           </button>
