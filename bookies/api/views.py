@@ -17,8 +17,8 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, BookClub, BookClubMembership, BookClubDiscussion
-from .serializers import ReviewSerializer, UserSerializer, BookClubSerializer, BookClubMembershipSerializer, BookClubDiscussionSerializer
+from .models import Review, BookClub, BookClubMembership, BookClubDiscussion,ReviewReply,ReviewLike
+from .serializers import ReviewSerializer, UserSerializer, BookClubSerializer, BookClubMembershipSerializer, BookClubDiscussionSerializer,ReviewReplySerializer,ReviewLikeSerializer
 
 
 User = get_user_model()
@@ -75,30 +75,94 @@ def validate_google_token(request):
     return JsonResponse({'detail': 'Method not allowed.'}, status=405)
 
 
-class ReviewView(APIView):
 
+class ReviewView(APIView):
+    permission_classes = [IsAuthenticated]  # Set default permissions
+
+    # POST: Create a new review
     def post(self, request):
-        permission_classes = [IsAuthenticated]
         serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # GET: Get all reviews
     def get(self, request):
         permission_classes = [AllowAny]
         reviews = Review.objects.all()
         serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data)
+
+class BookReviewsLike(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # POST: Like a review
+    def post(self, request, review_id):
+        try:
+            review = Review.objects.get(id=review_id)
+
+            # Check if the user has already liked the review
+            if ReviewLike.objects.filter(review=review, user=request.user).exists():
+                return Response({"error": "You have already liked this review."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create a like for the review
+            ReviewLike.objects.create(review=review, user=request.user)
+
+            # Instead of manually updating 'likes', we use the count of 'ReviewLike' objects
+            likes_count = ReviewLike.objects.filter(review=review).count()
+
+            return Response({"likes": likes_count}, status=status.HTTP_200_OK)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    # GET: Get all users who liked a review
+    def get(self, request, review_id):
+        try:
+            review = Review.objects.get(id=review_id)
+            likes = ReviewLike.objects.filter(review=review)  # Get all likes for this review
+            serializer = ReviewLikeSerializer(likes, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
     
+
+
+class BookReviewsReply(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # POST: Add a reply to a review
+    def post(self, request, review_id):
+        try:
+            review = Review.objects.get(id=review_id)
+            serializer = ReviewReplySerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(review=review, user=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # GET: Get all replies for a review
+    def get(self, request, review_id):
+        try:
+            review = Review.objects.get(id=review_id)
+            replies = review.replies.all()  # Assuming Review has a related name 'replies'
+            serializer = ReviewReplySerializer(replies, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Review.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class BookReviewsView(APIView):
     permission_classes = [AllowAny]
+
+    # GET: Get reviews for a specific book
     def get(self, request, google_books_id):
         reviews = Review.objects.filter(google_books_id=google_books_id)
         serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data)
-    
+
 
 class BookClubViewSet(viewsets.ModelViewSet):
     queryset = BookClub.objects.all()
