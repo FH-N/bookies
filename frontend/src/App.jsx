@@ -4,45 +4,37 @@ import { useAuthentication } from "./auth";
 //Import Pages
 import BookSearch from "./pages/SearchPage";
 import BookInfo from "./components/BookInfo";
-import RecommendationPage from "./pages/RecommendationPage";
+import RecommendationPage from "./pages/recommendation";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
-import NavBar from "./components/ui/Navbar";
+import NavBar from "./components/NavBar";
 import RedirectGoogleAuth from "./components/GoogleRedirectHandler";
 import ReviewForm from "./components/CreateReview";
-import LandingPage from "./pages/LandingPage";
-import HomePage from "./pages/HomePage";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
-
-  const ConditionalHome = () => {
-    return isAuthorized ? (
-      <HomePage />
-    ) : (
-      <LandingPage initialMethod="register" />
-    );
-  };
-
   const ProtectedLogin = () => {
     return isAuthorized ? (
       <Navigate to="/" />
     ) : (
-      <LandingPage initialMethod="login" />
+      <AuthPage initialMethod="login" />
     );
   };
   const ProtectedRegister = () => {
     return isAuthorized ? (
       <Navigate to="/" />
     ) : (
-      <LandingPage initialMethod="register" />
+      <AuthPage initialMethod="register" />
     );
   };
 
   return (
     <Router>
       <NavBar />
-      <div className="w-screen min-h-screen bg-gradient-to-b from-deep-purple to-light-purple pt-16">
+      <div className="container mx-auto flex flex-col items-center justify-center">
+        <h1 className="text-3xl font-bold underline text-blue-900">
+          Home Page
+        </h1>
         <Routes>
           <Route path="/login/callback" element={<RedirectGoogleAuth />} />
           <Route path="/login" element={<ProtectedLogin />} />
@@ -51,8 +43,7 @@ const App = () => {
           <Route path="/search" element={<BookSearch />} />
           <Route path="/book/:id" element={<BookInfo />} />
           <Route path="/review" element={<ReviewForm />} />
-          <Route path="/" element={<ConditionalHome />} />
-          <Route path="/recommendation" element={<RecommendationPage />} />
+          <Route path="/" element={<RecommendationPage />} />
         </Routes>
       </div>
     </Router>

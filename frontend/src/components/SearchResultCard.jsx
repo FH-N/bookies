@@ -22,7 +22,11 @@ const SearchResultCard = ({ book }) => {
           >
             More Info
           </a>
-          <Link to={`/book/${book.id}`} className="mt-2 text-blue-500">
+          {/* Link to BookInfo page using the book ID */}
+          <Link
+            to={`/book/${book.id}`} // Navigate to the detailed BookInfo page
+            className="mt-2 text-blue-500"
+          >
             View Details
           </Link>
         </div>
