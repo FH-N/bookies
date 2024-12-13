@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework import generics, status, viewsets, permissions, serializers
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.tokens import RefreshToken
 from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
@@ -76,9 +76,9 @@ def validate_google_token(request):
 
 
 class ReviewView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        permission_classes = [IsAuthenticated]
         serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
@@ -86,12 +86,14 @@ class ReviewView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
+        permission_classes = [AllowAny]
         reviews = Review.objects.all()
         serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data)
     
 
 class BookReviewsView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request, google_books_id):
         reviews = Review.objects.filter(google_books_id=google_books_id)
         serializer = ReviewSerializer(reviews, many=True)

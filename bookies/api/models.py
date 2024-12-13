@@ -16,15 +16,18 @@ class Book(models.Model):
     description = models.TextField(blank=True)
     category = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.title
+
 class Review(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     google_books_id = models.CharField(max_length=100)
     content = models.TextField()
     rating = models.PositiveIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Review by {self.user.username} on {self.book.title}"
+        return f"Review by {self.user.username} for Google Book ID {self.google_books_id}"
     
 
 class BookClub(models.Model):
