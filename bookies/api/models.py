@@ -25,6 +25,9 @@ class Review(models.Model):
     content = models.TextField()
     rating = models.PositiveIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
+    likes_count = models.PositiveIntegerField(default=0)
+    dislikes_count = models.PositiveIntegerField(default=0)
+    
 
     def __str__(self):
         return f"Review by {self.user.username} for Google Book ID {self.google_books_id}"
@@ -46,7 +49,15 @@ class ReviewLike(models.Model):
     def __str__(self):
         return f"{self.user.username} liked {self.review.id}"
     
-
+class ReviewDisLike(models.Model):
+    review = models.ForeignKey(Review, related_name='dislikes', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} disliked {self.review.id}"
+    
+    
 class BookClub(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
