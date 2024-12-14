@@ -60,3 +60,16 @@ class BookClubDiscussion(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.book_club.name})"
+
+
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('User', 'User'),
+        ('Author', 'Author'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')  # Dropdown field for roles
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
