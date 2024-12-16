@@ -7,6 +7,7 @@ import google from "../assets/google.png";
 const AuthForm = ({ route, method }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sucess, setSucess] = useState(null);
@@ -19,7 +20,9 @@ const AuthForm = ({ route, method }) => {
     setSucess(null);
 
     try {
-      const res = await api.post(route, { username, password });
+      const payload = { username, password, email  };
+
+      const res = await api.post(route, payload);
 
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
@@ -38,7 +41,7 @@ const AuthForm = ({ route, method }) => {
         if (error.response.status === 401) {
           setError("Invalid credentials");
         } else if (error.response.status === 400) {
-          setError("Username already exists");
+          setError("Username or email already exists");
         } else {
           setError("Something went wrong. Please try again.");
         }
@@ -92,6 +95,20 @@ const AuthForm = ({ route, method }) => {
               required
             />
           </div>
+          {method === "register" && (
+            <>
+              <div className="form-group">
+                <label htmlFor="email">Email:</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </>
+          )}
           <button type="submit" className="form-button">
             {method === "register" ? "Register" : "Login"}
           </button>
