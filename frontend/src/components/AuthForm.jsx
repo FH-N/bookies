@@ -131,21 +131,6 @@ const AuthForm = ({ route, method }) => {
               className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
             />
 
-              {/* {method === "register" && (
-              <>
-                <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}              
-                className="border-2 border-electric-indigo rounded-full w-64 p-2 text-electric-indigo font-poppins font-light"
-                >
-                    <option value="" disabled>Select Role</option>
-                    <option value="User">User</option>
-                    <option value="Author">Author</option>
-                </select>
-                </>
-              )} */}
-
             <Button type="submit" disabled={loading} >
               {loading
                 ? "Processing..."

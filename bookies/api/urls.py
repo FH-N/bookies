@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookReviewsView, BookClubMembershipViewSet, BookClubDiscussionViewSet, LoginAPIView, ReviewView, BookClubViewSet
+from .views import BookReviewsView, BookClubMembershipViewSet, BookClubDiscussionViewSet, ReviewView, BookClubViewSet
 
 router = DefaultRouter()
 router.register(r'book-clubs', BookClubViewSet)
@@ -9,8 +9,7 @@ router.register(r'book-club-discussions', BookClubDiscussionViewSet)
 
 urlpatterns = [
     path('books/', BookReviewsView.as_view(), name='book-list'), 
-    path('reviews/', ReviewView.as_view(), name='review-list-create'), 
-    path('login/', LoginAPIView.as_view(), name='api_login'),
+    path('reviews/', ReviewView.as_view(), name='review-list-create'),
 
     path('', include(router.urls)),  
 ]
