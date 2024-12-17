@@ -29,7 +29,7 @@ const AuthForm = ({ route, method }) => {
     setSuccess(null);
 
     try {
-      const res = await api.post(route, { username, password , email, role});
+      const res = await api.post(route, { username, password, email, role });
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
@@ -40,13 +40,22 @@ const AuthForm = ({ route, method }) => {
       }
     } catch (error) {
       console.error(error);
-      setError(
-        error.response?.status === 401
-          ? "Invalid credentials"
-          : error.response?.status === 400
-          ? "Username already exists"
-          : "Something went wrong. Please try again."
-      );
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            setError("Invalid credentials.");
+            break;
+          case 400:
+            setError("Username or email already exists.");
+            break;
+          default:
+            setError("Something went wrong. Please try again.");
+        }
+      } else if (error.request) {
+        setError("Network error. Please check your internet connection.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -76,28 +85,28 @@ const AuthForm = ({ route, method }) => {
             {method === "register" ? "Sign Up & Explore" : "Login & Explore"}
           </h2>
           <div className="flex flex-col items-center justify-center pb-4">
-          <div className="flex flex-row justify-between items-center w-44">
-  <h3
-    className={`cursor-pointer ${
-      role === "User" ? "text-electric-indigo font-bold" : ""
-    }`}
-    onClick={() => setRole("User")}
-  >
-    Booker
-  </h3>
-  <h3
-    className={`cursor-pointer ${
-      role === "Author" ? "text-electric-indigo font-bold" : ""
-    }`}
-    onClick={() => setRole("Author")}
-  >
-    Author
-  </h3>
-</div>
+            <div className="flex flex-row justify-between items-center w-44">
+              <h3
+                className={`cursor-pointer ${
+                  role === "User" ? "text-electric-indigo font-bold" : ""
+                }`}
+                onClick={() => setRole("User")}
+              >
+                Booker
+              </h3>
+              <h3
+                className={`cursor-pointer ${
+                  role === "Author" ? "text-electric-indigo font-bold" : ""
+                }`}
+                onClick={() => setRole("Author")}
+              >
+                Author
+              </h3>
+            </div>
             <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
           </div>
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
+          {error && <div className="text-red-500">{error}</div>}
+          {success && <div className="text-green-500">{success}</div>}
           <div className="grid gap-4">
             <input
               type="text"
@@ -111,15 +120,16 @@ const AuthForm = ({ route, method }) => {
             {method === "register" && (
               <>
                 <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="email"
-                className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light" />
-                </>
-           )}
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="email"
+                  className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
+                />
+              </>
+            )}
 
             <input
               type="password"
@@ -131,7 +141,7 @@ const AuthForm = ({ route, method }) => {
               className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
             />
 
-            <Button type="submit" disabled={loading} >
+            <Button type="submit" disabled={loading}>
               {loading
                 ? "Processing..."
                 : method === "register"

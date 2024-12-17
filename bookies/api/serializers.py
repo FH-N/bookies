@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Review , User, BookClub, BookClubMembership, BookClubDiscussion
-from django.contrib.auth.models import User
+from .models import Review , User, BookClub, BookClubMembership, BookClubDiscussion , ReviewReply, ReviewLike, ReviewDisLike
 
 
 
@@ -21,11 +20,39 @@ class UserSerializer(serializers.ModelSerializer):
         user.profile.save()
 
         return user
-    
+
+class ReviewReplySerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = ReviewReply
+        fields = ['id', 'user', 'content', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+
+class ReviewLikeSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = ReviewLike
+        fields = ['id', 'user', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+
+class ReviewDisLikeSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = ReviewDisLike
+        fields = ['id', 'user', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+
 class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+    replies = ReviewReplySerializer(many=True, read_only=True)
+    likes = ReviewLikeSerializer(many=True, read_only=True)
+    dislikes = ReviewDisLikeSerializer(many=True, read_only=True)
     class Meta:
         model = Review
-        fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'created_at']
+        fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
 
 class BookClubMembershipSerializer(serializers.ModelSerializer):

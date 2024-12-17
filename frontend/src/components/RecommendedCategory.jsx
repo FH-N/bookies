@@ -1,37 +1,43 @@
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const RecommendedCategory = ({ category, books }) => {
-  if (!books || books.length === 0) {
-    return (
-      <div className="recommended-category">
-        <h2>{category}</h2>
-        <p>No books available in this category.</p>
-      </div>
-    );
-  }
+const RecommendedCategory = ({ searchTerms }) => {
+  const [searchResults, setSearchResults] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const results = [];
+
+      for (const term of searchTerms) {
+        try {
+          const response = await axios.get(
+            `https://www.googleapis.com/books/v1/volumes?q=${term}`
+          );
+          results.push(...(response.data.items || []));
+        } catch (error) {
+          console.error(`Error fetching results for term '${term}':`, error);
+        }
+      }
+
+      setSearchResults(results);
+    };
+
+    fetchData();
+  }, [searchTerms]);
 
   return (
-    <div className="recommended-category">
-      <h2 className="text-xl font-bold mb-2">{category}</h2>
+    <div>
       <ul>
-        {/* Loop through the books and display each book title and thumbnail */}
-        {books.map((book) => {
-          const thumbnail = book.volumeInfo?.imageLinks?.thumbnail;
-
-          return (
-            <li key={book.id}>
-              {/* Display book thumbnail and title */}
-              {thumbnail && (
-                <img src={thumbnail} alt={book.volumeInfo.title} width={100} />
-              )}
-              <h3>{book.volumeInfo?.title || "No Title Available"}</h3>
-              <Link to={`/book/${book.id}`} className="mt-2 text-blue-500">
-                View Details
-              </Link>
-              <p>------------</p>
-            </li>
-          );
-        })}
+        {searchResults.map((result) => (
+          <li key={result.id}>
+            <h3>{result.volumeInfo.title}</h3>
+            <img
+              src={result.volumeInfo.imageLinks?.thumbnail}
+              alt={result.volumeInfo.title}
+              width={100}
+            />
+          </li>
+        ))}
       </ul>
     </div>
   );
