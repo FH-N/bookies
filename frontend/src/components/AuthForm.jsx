@@ -9,6 +9,7 @@ const AuthForm = ({ route, method }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("User");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -28,9 +29,7 @@ const AuthForm = ({ route, method }) => {
     setSuccess(null);
 
     try {
-      const payload = { username, password, email };
-      const res = await api.post(route, payload);
-
+      const res = await api.post(route, { username, password, email, role });
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
@@ -77,97 +76,116 @@ const AuthForm = ({ route, method }) => {
           )}
         </div>
       )}
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col justify-center items-center rounded-xl bg-white text-deep-purple h-3/4 w-3/4"
-      >
-        <h2 className="font-poppins text-xl p-2">
-          {method === "register" ? "Sign Up & Explore" : "Login & Explore"}
-        </h2>
-        <div className="flex flex-col items-center justify-center pb-4">
-          <div className="flex flex-row justify-between items-center w-44">
-            <h3>Booker</h3>
-            <h3>Author</h3>
+      {!loading && (
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col justify-center items-center rounded-xl bg-white text-deep-purple h-3/4 w-3/4"
+        >
+          <h2 className="font-poppins text-xl p-2 ">
+            {method === "register" ? "Sign Up & Explore" : "Login & Explore"}
+          </h2>
+          <div className="flex flex-col items-center justify-center pb-4">
+            <div className="flex flex-row justify-between items-center w-44">
+              <h3
+                className={`cursor-pointer ${
+                  role === "User" ? "text-electric-indigo font-bold" : ""
+                }`}
+                onClick={() => setRole("User")}
+              >
+                Booker
+              </h3>
+              <h3
+                className={`cursor-pointer ${
+                  role === "Author" ? "text-electric-indigo font-bold" : ""
+                }`}
+                onClick={() => setRole("Author")}
+              >
+                Author
+              </h3>
+            </div>
+            <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
           </div>
-          <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
-        </div>
-        {error && <div className="text-red-500">{error}</div>}
-        {success && <div className="text-green-500">{success}</div>}
-        <div className="grid gap-4">
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            disabled={loading}
-            required
-            placeholder="Username"
-            className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
-          />
-          {method === "register" && (
+          {error && <div className="text-red-500">{error}</div>}
+          {success && <div className="text-green-500">{success}</div>}
+          <div className="grid gap-4">
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
-              placeholder="Email"
+              placeholder="username"
               className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
             />
+            {method === "register" && (
+              <>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="email"
+                  className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
+                />
+              </>
+            )}
+
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="password"
+              className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
+            />
+
+            <Button type="submit" disabled={loading}>
+              {loading
+                ? "Processing..."
+                : method === "register"
+                ? "Sign Up"
+                : "Login"}
+            </Button>
+
+            <h1 className="flex items-center justify-center text-xl">Or</h1>
+            <Button
+              type="button"
+              className="bg-pink-flower hover:bg-light-purple hover:text-white"
+              onClick={handleGoogleLogin}
+            >
+              {/* <img src={google} alt="Google icon" className="google-icon" /> */}
+              {method === "register"
+                ? "Register with Google"
+                : "Login with Google"}
+            </Button>
+            <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
+          </div>
+          {method === "login" && (
+            <p className="pt-2">
+              Don't have an account?
+              <span
+                className="font-semibold p-1 text-deep-purple cursor-pointer"
+                onClick={() => navigate("/register")}
+              >
+                Register
+              </span>
+            </p>
           )}
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            required
-            placeholder="Password"
-            className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
-          />
-          <Button type="submit" disabled={loading}>
-            {loading
-              ? "Processing..."
-              : method === "register"
-              ? "Sign Up"
-              : "Login"}
-          </Button>
-          <h1 className="flex items-center justify-center text-xl">Or</h1>
-          <Button
-            type="button"
-            className="bg-pink-flower hover:bg-light-purple hover:text-white"
-            onClick={handleGoogleLogin}
-          >
-            {method === "register"
-              ? "Register with Google"
-              : "Login with Google"}
-          </Button>
-          <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
-        </div>
-        {method === "login" && (
-          <p className="pt-2">
-            Don't have an account?
-            <span
-              className="font-semibold p-1 text-deep-purple cursor-pointer"
-              onClick={() => navigate("/register")}
-            >
-              Register
-            </span>
-          </p>
-        )}
-        {method === "register" && (
-          <p>
-            Already have an account?
-            <span
-              className="font-semibold p-1 text-deep-purple cursor-pointer"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </span>
-          </p>
-        )}
-      </form>
+          {method === "register" && (
+            <p className="toggle-text">
+              Already have an account?
+              <span
+                className="font-semibold p-1 text-deep-purple cursor-pointer"
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </span>
+            </p>
+          )}
+        </form>
+      )}
     </div>
   );
 };

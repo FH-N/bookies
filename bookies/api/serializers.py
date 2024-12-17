@@ -4,19 +4,21 @@ from .models import Review , User, BookClub, BookClubMembership, BookClubDiscuss
 
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(write_only=True)  # Add `role` as a writable field
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('id', 'username', 'email','password', 'role')
+        extra_kwargs = { 'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            # user_type=validated_data.get('user_type', 'reader'),
-        )
-        user.set_password(validated_data['password'])  
-        user.save()
+        role = validated_data.pop('role', 'viewer')
+
+        user = User.objects.create_user(**validated_data)
+
+        user.profile.role = role
+        user.profile.save()
+
         return user
 
 class ReviewReplySerializer(serializers.ModelSerializer):
