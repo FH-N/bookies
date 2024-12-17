@@ -1,7 +1,6 @@
 import requests
 from django.http import JsonResponse, request, QueryDict
 from django.views.decorators.http import require_POST
-from api.models import Book
 from bookies.utlis import search_books_by_category
 from .credentials import GOOGLE_BOOKS_API_KEY, CLIENT_SECRET, CLIENT_ID
 
@@ -31,6 +30,7 @@ def search_books(request):
             'authors': ", ".join(volume.get('authors', [])),
             'thumbnail': volume.get('imageLinks', {}).get('thumbnail', ''),
             'infoLink': volume.get('infoLink', '#'),
+            'rating': volume.get('averageRating', 'No rating available')
         })
 
     return JsonResponse({'books': books})

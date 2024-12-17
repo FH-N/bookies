@@ -17,8 +17,8 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, BookClub, BookClubMembership, BookClubDiscussion,ReviewReply,ReviewLike,ReviewDisLike
-from .serializers import ReviewSerializer, UserSerializer, BookClubSerializer, BookClubMembershipSerializer, BookClubDiscussionSerializer,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer
+from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost
+from .serializers import ReviewSerializer, UserSerializer ,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer, BookClubSerializer, BookClubPostSerializer
 
 from django.contrib.auth import authenticate
 
@@ -308,57 +308,6 @@ class BookReviewsView(APIView):
         return Response(serializer.data)
 
 
-class BookClubViewSet(viewsets.ModelViewSet):
-    queryset = BookClub.objects.all()
-    serializer_class = BookClubSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    @action(detail=True, methods=['get'])
-    def members(self, request, pk=None):
-        book_club = self.get_object()
-        memberships = BookClubMembership.objects.filter(book_club=book_club)
-        serializer = BookClubMembershipSerializer(memberships, many=True)
-        return Response(serializer.data)
-
-class BookClubMembershipViewSet(viewsets.ModelViewSet):
-    queryset = BookClubMembership.objects.all()
-    serializer_class = BookClubMembershipSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        # Automatically assign the current user to the club
-        user = self.request.user
-        book_club = serializer.validated_data['book_club']
-        if not BookClubMembership.objects.filter(user=user, book_club=book_club).exists():
-            serializer.save(user=user)
-        else:
-            raise serializers.ValidationError("User is already a member of this club.")
-
-    @action(detail=True, methods=['get'])
-    def users(self, request, pk=None):
-        membership = self.get_object()
-        user = membership.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
-class BookClubDiscussionViewSet(viewsets.ModelViewSet):
-    queryset = BookClubDiscussion.objects.all()
-    serializer_class = BookClubDiscussionSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        # Automatically assign the current user as the creator of the discussion
-        serializer.save(created_by=self.request.user)
-
-    @action(detail=True, methods=['get'])
-    def book_club_discussions(self, request, pk=None):
-        book_club = self.get_object()
-        discussions = BookClubDiscussion.objects.filter(book_club=book_club)
-        serializer = BookClubDiscussionSerializer(discussions, many=True)
-        return Response(serializer.data)
 
 
 class LoginAPIView(APIView):
@@ -380,3 +329,70 @@ class LoginAPIView(APIView):
                 })
             return Response({'detail': 'Account is disabled.'}, status=403)
         return Response({'detail': 'Invalid credentials.'}, status=401)
+
+
+class BookClubView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        name = data.get('name')
+        description = data.get('description')
+        club = BookClub.objects.create(
+            name=name,
+            description=description,
+        )
+        club.members.add(request.user)
+        return Response({"message": "Book club created!"}, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        clubs = BookClub.objects.all()
+        serializer = BookClubSerializer(clubs, many=True)
+        return Response(serializer.data)
+
+class JoinBookClubView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, club_id):
+        club = BookClub.objects.get(id=club_id)
+        club.members.add(request.user)
+        return Response({"message": f"You've joined {club.name}!"}, status=status.HTTP_200_OK)
+    
+class LeaveBookClubView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, club_id):
+        club = BookClub.objects.get(id=club_id)
+        club.members.remove(request.user)
+        return Response({"message": f"You've left {club.name}!"}, status=status.HTTP_200_OK)
+
+
+class BookClubPostView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, club_id):
+        try:
+            club = BookClub.objects.get(id=club_id)
+            posts = BookClubPost.objects.filter(club=club).order_by('-created_at')
+            serializer = BookClubPostSerializer(posts, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except BookClub.DoesNotExist:
+            return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request, club_id):
+        try:
+            club = BookClub.objects.get(id=club_id)
+            if request.user not in club.members.all():
+                return Response({"error": "You must be a member of this club to post"}, status=status.HTTP_403_FORBIDDEN)
+
+            data = request.data.copy()
+            data['club'] = club.id
+            data['author'] = request.user.id
+
+            serializer = BookClubPostSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save(author=request.user, club=club)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except BookClub.DoesNotExist:
+            return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)

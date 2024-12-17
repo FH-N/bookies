@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Review , User, BookClub, BookClubMembership, BookClubDiscussion , ReviewReply, ReviewLike, ReviewDisLike
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost
 
 
-
+#User serializers
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(write_only=True)  # Add `role` as a writable field
+    role = serializers.CharField(write_only=True) 
 
     class Meta:
         model = User
@@ -21,6 +21,8 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+
+#Review serializers
 class ReviewReplySerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
 
@@ -55,28 +57,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
 
-class BookClubMembershipSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    role = serializers.ChoiceField(choices=BookClubMembership.ROLE_CHOICES)
-
-    class Meta:
-        model = BookClubMembership
-        fields = ['user', 'role', 'joined_at']
 
 class BookClubSerializer(serializers.ModelSerializer):
-    owner = UserSerializer()
-    members = BookClubMembershipSerializer(many=True, read_only=True)
-    is_private = serializers.BooleanField()
+    members = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = BookClub
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at', 'slug', 'owner', 'members', 'is_private']
+        fields = ['id', 'name', 'description', 'members', 'created_at']
 
-class BookClubDiscussionSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer()
-    book_club = BookClubSerializer()
+class BookClubPostSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    created_at = serializers.ReadOnlyField()
 
     class Meta:
-        model = BookClubDiscussion
-        fields = ['id', 'book_club', 'title', 'content', 'created_by', 'created_at', 'updated_at']
-
+        model = BookClubPost
+        fields = ['id', 'club', 'author', 'content', 'created_at']
