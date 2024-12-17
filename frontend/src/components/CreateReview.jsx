@@ -16,18 +16,55 @@ const ReviewForm = ({ googleBooksId }) => {
         }
       );
       alert("Review posted successfully!");
-      setContent("");
-      setRating(5); // Reset form fields after successful submission
     } catch (error) {
-      console.error(error.response?.data || error.message);
-      alert("Failed to post review. Please try again.");
+      console.error(error);
+      alert("Failed to post review.");
     }
   };
 
   return (
     <div className="p-6">
+      <h1 className="text-4xl font-bold text-center mb-8">Bookstore Reviews</h1>
+
+      <div id="books" className="mb-8">
+        {books.map((book) => (
+          <div key={book.id} className="p-4 border mb-6 rounded-lg">
+            <h3 className="text-2xl font-semibold">{book.title}</h3>
+            <p className="text-lg mb-2">
+              <strong>Author:</strong> {book.author}
+            </p>
+            <p className="text-sm mb-4">
+              {book.description || "No description available"}
+            </p>
+            <h4 className="font-semibold">Reviews:</h4>
+            <ul className="space-y-2">
+              {book.reviews.map((review, index) => (
+                <li key={index} className="text-sm">
+                  <strong>{review.user}</strong>: {review.rating}/5 -{" "}
+                  {review.comment}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
       <h2 className="text-2xl font-semibold mb-4">Add a Review</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={submitReview} className="space-y-4">
+        <div>
+          <label htmlFor="book-id" className="block">
+            Book ID:
+          </label>
+          <input
+            type="number"
+            id="book-id"
+            value={bookId}
+            onChange={(e) => setBookId(e.target.value)}
+            required
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
+
         <div>
           <label htmlFor="rating" className="block">
             Rating (1-5):
@@ -45,13 +82,13 @@ const ReviewForm = ({ googleBooksId }) => {
         </div>
 
         <div>
-          <label htmlFor="content" className="block">
+          <label htmlFor="comment" className="block">
             Comment:
           </label>
           <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            id="comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
             required
             className="w-full p-2 border rounded-md"
           />

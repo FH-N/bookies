@@ -20,6 +20,8 @@ import json
 from .models import Review, BookClub, BookClubMembership, BookClubDiscussion,ReviewReply,ReviewLike,ReviewDisLike
 from .serializers import ReviewSerializer, UserSerializer, BookClubSerializer, BookClubMembershipSerializer, BookClubDiscussionSerializer,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer
 
+from django.contrib.auth import authenticate
+
 
 User = get_user_model()
 
@@ -357,3 +359,24 @@ class BookClubDiscussionViewSet(viewsets.ModelViewSet):
         discussions = BookClubDiscussion.objects.filter(book_club=book_club)
         serializer = BookClubDiscussionSerializer(discussions, many=True)
         return Response(serializer.data)
+
+
+class LoginAPIView(APIView):
+    permission_classes = [AllowAny]  # Allow anyone to access this endpoint
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'detail': 'Username and password are required.'}, status=400)
+
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            if user.is_active:
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                })
+            return Response({'detail': 'Account is disabled.'}, status=403)
+        return Response({'detail': 'Invalid credentials.'}, status=401)
