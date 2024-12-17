@@ -1,27 +1,34 @@
 import api from "../api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../token";
-import google from "../assets/google.png";
+import Line from "./ui/Line";
+import Button from "./ui/Button";
 
 const AuthForm = ({ route, method }) => {
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [sucess, setSucess] = useState(null);
+  const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => navigate("/login"), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    setSucess(null);
+    setSuccess(null);
 
     try {
-      const payload = { username, password, email  };
-
+      const payload = { username, password, email };
       const res = await api.post(route, payload);
 
       if (method === "login") {
@@ -30,20 +37,20 @@ const AuthForm = ({ route, method }) => {
         navigate("/");
         window.location.reload();
       } else {
-        setSucess("Registration successful. Please login.");
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setSuccess("Registration successful. Please login.");
       }
     } catch (error) {
       console.error(error);
       if (error.response) {
-        if (error.response.status === 401) {
-          setError("Invalid credentials");
-        } else if (error.response.status === 400) {
-          setError("Username or email already exists");
-        } else {
-          setError("Something went wrong. Please try again.");
+        switch (error.response.status) {
+          case 401:
+            setError("Invalid credentials.");
+            break;
+          case 400:
+            setError("Username or email already exists.");
+            break;
+          default:
+            setError("Something went wrong. Please try again.");
         }
       } else if (error.request) {
         setError("Network error. Please check your internet connection.");
@@ -60,89 +67,107 @@ const AuthForm = ({ route, method }) => {
   };
 
   return (
-    <div className="form-container">
+    <div className="w-full h-full container">
       {loading && (
         <div className="loading-indicator">
           {error ? (
-            <span className="error-message">{error}</span>
+            <span className="text-red-500">{error}</span>
           ) : (
             <div className="spinner"></div>
           )}
         </div>
       )}
-      {!loading && (
-        <form onSubmit={handleSubmit} className="form">
-          <h2>{method === "register" ? "Register" : "Login"}</h2>
-          {error && <div className="error-message">{error}</div>}
-          {sucess && <div className="success-message">{sucess}</div>}
-          <div className="form-group">
-            <label htmlFor="username">Username:</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col justify-center items-center rounded-xl bg-white text-deep-purple h-3/4 w-3/4"
+      >
+        <h2 className="font-poppins text-xl p-2">
+          {method === "register" ? "Sign Up & Explore" : "Login & Explore"}
+        </h2>
+        <div className="flex flex-col items-center justify-center pb-4">
+          <div className="flex flex-row justify-between items-center w-44">
+            <h3>Booker</h3>
+            <h3>Author</h3>
           </div>
-          <div className="form-group">
-            <label htmlFor="username">Password:</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
+        </div>
+        {error && <div className="text-red-500">{error}</div>}
+        {success && <div className="text-green-500">{success}</div>}
+        <div className="grid gap-4">
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={loading}
+            required
+            placeholder="Username"
+            className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
+          />
           {method === "register" && (
-            <>
-              <div className="form-group">
-                <label htmlFor="email">Email:</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+              placeholder="Email"
+              className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
+            />
           )}
-          <button type="submit" className="form-button">
-            {method === "register" ? "Register" : "Login"}
-          </button>
-          <button
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            required
+            placeholder="Password"
+            className="border-2 border-electric-indigo rounded-full w-64 p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
+          />
+          <Button type="submit" disabled={loading}>
+            {loading
+              ? "Processing..."
+              : method === "register"
+              ? "Sign Up"
+              : "Login"}
+          </Button>
+          <h1 className="flex items-center justify-center text-xl">Or</h1>
+          <Button
             type="button"
-            className="google-button"
+            className="bg-pink-flower hover:bg-light-purple hover:text-white"
             onClick={handleGoogleLogin}
           >
-            <img src={google} alt="Google icon" className="google-icon" />
             {method === "register"
               ? "Register with Google"
               : "Login with Google"}
-          </button>
-          {method === "login" && (
-            <p className="toggle-text">
-              Don't have an account?
-              <span
-                className="toggle-link"
-                onClick={() => navigate("/register")}
-              >
-                Register
-              </span>
-            </p>
-          )}
-          {method === "register" && (
-            <p className="toggle-text">
-              Already have an account?
-              <span className="toggle-link" onClick={() => navigate("/login")}>
-                Login
-              </span>
-            </p>
-          )}
-        </form>
-      )}
+          </Button>
+          <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
+        </div>
+        {method === "login" && (
+          <p className="pt-2">
+            Don't have an account?
+            <span
+              className="font-semibold p-1 text-deep-purple cursor-pointer"
+              onClick={() => navigate("/register")}
+            >
+              Register
+            </span>
+          </p>
+        )}
+        {method === "register" && (
+          <p>
+            Already have an account?
+            <span
+              className="font-semibold p-1 text-deep-purple cursor-pointer"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </span>
+          </p>
+        )}
+      </form>
     </div>
   );
 };
