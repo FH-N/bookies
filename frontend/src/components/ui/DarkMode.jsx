@@ -16,7 +16,7 @@ function DarkModeToggle() {
   return (
     <button
       onClick={toggleDarkMode}
-      className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+      className="flex items-center justify-center w-10 h-10 rounded-full bg-light-purple dark:bg-deep-purple text-white"
       aria-label="Toggle Dark Mode"
     >
       {isDarkMode ? (

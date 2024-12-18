@@ -84,7 +84,7 @@ const BookInfo = () => {
           + Add Book
         </Button>
         <Button
-          className="bg-pink-flower w-full font-semibold mt-5 text-lg"
+          className="dark:bg-pink-flower bg-light-purple w-full font-semibold mt-5 text-lg"
           onClick={(e) => {
             e.stopPropagation();
             window.open(book.infoLink, "_blank");

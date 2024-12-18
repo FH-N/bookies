@@ -45,7 +45,7 @@ const App = () => {
   return (
     <Router>
       <NavBar />
-      <div className="w-screen min-h-screen bg-gradient-to-b from-deep-purple from-45% to-light-purple pt-16">
+      <div className="w-full min-h-[calc(100vh-4rem)] bg-gradient-to-b from-light-purple via-light-purple-pink-flower to-pink-flower from-45%  dark:from-deep-purple dark:via-deep-purple-light-purple dark:to-light-purple pt-16">
         <Routes>
           <Route path="/login/callback" element={<RedirectGoogleAuth />} />
           <Route path="/login" element={<ProtectedLogin />} />

@@ -23,7 +23,7 @@ function Navbar() {
   };
 
   return (
-    <div className="fixed top-0 w-full z-[999] bg-deep-purple">
+    <div className="fixed top-0 w-full z-[999] bg-light-purple dark:bg-deep-purple">
       <div className="container flex items-center justify-between w-full h-16 px-4 font-medium font-poppins">
         {/* Left: Logo */}
         <Link to="/" className="font-bold text-white text-3xl">
@@ -45,10 +45,10 @@ function Navbar() {
 
         {/* Right: Icons and Auth Links */}
         <div className="flex items-center space-x-4">
+          <DarkModeToggle />
           {/* Only visible when logged in */}
           {isAuthorized && (
             <>
-              <DarkModeToggle />
               <IconUserCircle
                 stroke={2}
                 className="text-white cursor-pointer"

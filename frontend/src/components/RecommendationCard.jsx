@@ -1,13 +1,23 @@
+import { useNavigate } from "react-router-dom";
 import { IconStarFilled } from "@tabler/icons-react";
 import Button from "./ui/Button";
 
 const RecommendationCard = ({ result }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/book/${result.id}`);
+  };
+
   return (
-    <div className="bg-white w-44 h-[450px] text-black font-poppins text-wrap rounded-lg shadow-xl overflow-hidden flex flex-col">
+    <div
+      className="bg-white w-44 h-[450px] text-black font-poppins text-wrap rounded-xl shadow-xl overflow-hidden flex flex-col cursor-pointer"
+      onClick={handleCardClick}
+    >
       <img
         src={result.volumeInfo.imageLinks?.thumbnail}
         alt={result.volumeInfo.title}
-        className="w-44 h-[250px] object-cover" // Set image size to make space for the content below
+        className="w-44 h-[250px] object-cover"
       />
       <div className="p-4 flex flex-col justify-between flex-grow">
         {/* Title */}
