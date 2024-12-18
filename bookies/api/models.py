@@ -1,17 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User,AbstractUser
+from django.contrib.auth.models import User, AbstractUser
 from django.utils.text import slugify
 from django.contrib.auth.hashers import make_password , check_password
 
-
-class Book(models.Model):
-    title = models.CharField(max_length=255)
-    author = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    category = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.title
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -50,50 +41,6 @@ class ReviewDisLike(models.Model):
     
     def __str__(self):
         return f"{self.user.username} disliked {self.review.id}"
-    
-    
-class BookClub(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    slug = models.SlugField(unique=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="owned_clubs")
-    members = models.ManyToManyField(User, through="BookClubMembership", related_name="book_clubs")
-    is_private = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-class BookClubMembership(models.Model):
-    ROLE_CHOICES = [
-        ('member', 'Member'),
-        ('moderator', 'Moderator'),
-        ('owner', 'Owner'),
-    ]
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="club_memberships")
-    book_club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name="memberships")
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member')
-    joined_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'book_club')
-
-    def __str__(self):
-        return f"{self.user.username} - {self.book_club.name} ({self.role})"
-
-class BookClubDiscussion(models.Model):
-    book_club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name="discussions")
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="discussions")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} ({self.book_club.name})"
-
 
 
 class UserProfile(models.Model):
@@ -102,7 +49,58 @@ class UserProfile(models.Model):
         ('Author', 'Author'),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')  # Dropdown field for roles
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')  
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
+
+
+class ClubTag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class PostTag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class BookClub(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    owner = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='owned_clubs'
+    ) 
+    members = models.ManyToManyField(User, related_name='book_clubs')
+    club_tags = models.ManyToManyField(ClubTag, related_name='book_clubs', blank=True)  # Tags for the club
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class BookClubPost(models.Model):
+    club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='bookclub_posts')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='club_posts')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    post_tags = models.ManyToManyField(PostTag, related_name='bookclub_posts', blank=True)  # Separate post tags
+
+    def __str__(self):
+        return f"Post by {self.author.username} in {self.club.name}"
+
+
+class ClubPost(models.Model): 
+    club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='clubpost_posts')
+    content = models.TextField()
+
+    def __str__(self):
+        return f"Post in {self.club.name}"
+
+

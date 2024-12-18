@@ -5,7 +5,6 @@ const RecommendationList = () => {
 
   return (
     <div>
-      <h1>Book Search App</h1>
       <RecommendedCategory searchTerms={searchTerms} />
     </div>
   );

@@ -1,11 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookClubMembershipViewSet, BookClubDiscussionViewSet, BookClubViewSet , BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply
+from .views import BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, BookClubView, JoinBookClubView, LeaveBookClubView, BookClubPostView, ClubTagView, PostTagView
 
 router = DefaultRouter()
-router.register(r'book-clubs', BookClubViewSet)
-router.register(r'book-club-memberships', BookClubMembershipViewSet)
-router.register(r'book-club-discussions', BookClubDiscussionViewSet)
+
 
 urlpatterns = [
     path('books/', BookReviewsView.as_view(), name='book-list'), 
@@ -20,6 +18,16 @@ urlpatterns = [
     path('books/<str:google_books_id>/reviews/', BookReviewsView.as_view(), name='book_reviews'),
     path('reviews/<int:review_id>/dislike/', DislikeReview.as_view(), name='dislike_review'),
     path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-review"),
+    path('bookclubs/', BookClubView.as_view(), name='bookclubs-list-create'),
+    path('bookclubs/<int:pk>/', BookClubView.as_view(), name='bookclub-detail-update-delete'),
+    path('bookclubs/join/<int:club_id>/', JoinBookClubView.as_view(), name='join_book_club'), 
+    path('bookclubs/leave/<int:club_id>/', LeaveBookClubView.as_view(), name='leave_book_club'),  
+    path('bookclubs/<int:club_id>/posts/', BookClubPostView.as_view(), name='bookclub-posts'),
+    path('bookclubs/<int:club_id>/posts/<int:post_id>/', BookClubPostView.as_view(), name='bookclub-post-detail'),
+    path('clubtags/', ClubTagView.as_view(), name='clubtags-list-create'),
+    path('clubtags/<int:pk>/', ClubTagView.as_view(), name='clubtag-detail-update-delete'),
+    path('posttags/', PostTagView.as_view(), name='posttags-list-create'),
+    path('posttags/<int:pk>/', PostTagView.as_view(), name='posttag-detail-update-delete'),
 
     path('', include(router.urls)),  
 ]

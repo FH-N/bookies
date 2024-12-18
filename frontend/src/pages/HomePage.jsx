@@ -2,44 +2,64 @@ import { IconSettings } from "@tabler/icons-react";
 import Streak from "../components/Streak";
 import SideNav from "../components/ui/SideNav";
 import Line from "../components/ui/Line";
+import RecommendedCategory from "../components/RecommendedCategory";
+import { useAuthentication } from "../auth";
 
 const HomePage = () => {
+  const { user } = useAuthentication();
+
   return (
-    <div className="container flex flex-row mt-8 text-white font-poppins">
-      <div className="w-1/4 bg-blue-500">
+    <div className="container min-h-screen flex flex-row mt-8 text-white font-poppins">
+      {/* Side Navigation */}
+      <div className="w-1/5 flex justify-center">
         <SideNav />
       </div>
-      <div className="w-2/4 bg-red-500 flex flex-col">
-        <h1 className="text-3xl font-bold p-3">
+
+      {/* Vertical Line */}
+      <div className="border-r border-white h-96"></div>
+
+      {/* Main Content */}
+      <div className="w-3/5 px-12 flex flex-col">
+        {/* Welcome Message */}
+        <h1 className="text-4xl font-bold mb-6 tracking-wide px-8">
           Welcome back&nbsp;
-          <span className="text-3xl font-bold bg-gradient-to-b from-aqua-teal to-light-purple bg-clip-text text-transparent">
-            Farida!
+          <span className="bg-gradient-to-b dark:from-aqua-teal dark:to-light-purple from-lemon-lime to-pink-flower from-45% dark bg-clip-text text-transparent">
+            {user?.username || "User"}
           </span>
+          !
         </h1>
+
+        {/* Streak Component */}
         <Streak />
-        <div className="flex flex-row justify-between items-center font-poppins font-bold mx-10 py-3">
-          <div className="flex flex-col items-center">
-            <h3>For you</h3>
-            <Line className="border-deep-white border-t-2 w-20 mx-auto" />
-          </div>
-          <div className="flex flex-col items-center">
-            <h3>Following</h3>
-            <Line className="border-deep-white border-t-2 w-20 mx-auto" />
-          </div>
-          <div className="flex flex-col items-center">
-            <h3>Author</h3>
-            <Line className="border-deep-white border-t-2 w-20 mx-auto" />
-          </div>
-          <div className="flex flex-row">
-            <IconSettings />
+
+        {/* Navigation Options */}
+        <div className="flex flex-row justify-between items-center font-bold my-6 space-x-4">
+          {["For you", "Following", "Author"].map((option, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <h3 className="text-lg">{option}</h3>
+              <Line className="border-deep-white border-t-2 w-20 mt-2" />
+            </div>
+          ))}
+
+          {/* Customize Option */}
+          <div className="flex flex-row items-center space-x-2">
+            <IconSettings size={24} />
             <div className="flex flex-col items-center">
-              <h3>Customize</h3>
-              <Line className="border-deep-white border-t-2 w-20 mx-auto" />
+              <h3 className="text-lg">Customize</h3>
+              <Line className="border-deep-white border-t-2 w-20 mt-2" />
             </div>
           </div>
         </div>
+
+        {/* Recommended Categories */}
+        <div className="space-y-8">
+          <RecommendedCategory searchTerm="Romance" />
+          <RecommendedCategory searchTerm="Fantasy" />
+        </div>
       </div>
-      <div className="w-1/4 bg-yellow-300"></div>
+
+      {/* Right Sidebar (Optional Content Area) */}
+      <div className="w-1/5"></div>
     </div>
   );
 };
