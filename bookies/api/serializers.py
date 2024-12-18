@@ -70,12 +70,22 @@ class BookClubSerializer(serializers.ModelSerializer):
     tag_ids = serializers.PrimaryKeyRelatedField(
         many=True, queryset=ClubTag.objects.all(), write_only=True, source='club_tags'
     )  
-
     is_member = serializers.SerializerMethodField()
+    owner = serializers.StringRelatedField()  # Display owner's username
 
     class Meta:
         model = BookClub
-        fields = ['id', 'name', 'description', 'members', 'club_tags', 'tag_ids', 'created_at', 'is_member']
+        fields = [
+            'id', 
+            'name', 
+            'description', 
+            'members', 
+            'club_tags', 
+            'tag_ids', 
+            'created_at', 
+            'is_member', 
+            'owner'  
+        ]
 
     def get_is_member(self, obj):
         request = self.context.get('request')
@@ -83,8 +93,6 @@ class BookClubSerializer(serializers.ModelSerializer):
             return obj.members.filter(id=request.user.id).exists()
         return False
 
-from rest_framework import serializers
-from .models import BookClubPost, PostTag
 
 class PostTagSerializer(serializers.ModelSerializer):
     class Meta:

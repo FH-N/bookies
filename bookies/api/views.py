@@ -37,7 +37,15 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
-    
+    def get(self, request):
+        # Return details of the currently authenticated user
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            # Add other fields you want to include
+        })
 
 @login_required
 def google_login_callback(request):
@@ -400,6 +408,14 @@ class IsPostOwnerOrAdmin(BasePermission):
         return False
 
 
+class IsOwnerOrAdminPermission(BasePermission):
+    """
+    Custom permission to check if the user is the owner or an admin.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user or request.user.is_staff
+
 class BookClubView(APIView):
     permission_classes = [AllowAny]
 
@@ -427,18 +443,18 @@ class BookClubView(APIView):
             return Response({"error": "Both 'name' and 'description' are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         tag_ids = data.get('tag_ids', [])
-
         club = BookClub.objects.create(
             name=name,
             description=description,
+            owner=request.user,  # Set the owner as the logged-in user
         )
-        club.members.add(request.user)
+        club.members.add(request.user)  # Automatically add the owner as a member
 
         if tag_ids:
             club_tags = ClubTag.objects.filter(id__in=tag_ids)
             club.club_tags.set(club_tags)
 
-        serializer = BookClubSerializer(club)
+        serializer = BookClubSerializer(club, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
@@ -460,10 +476,10 @@ class BookClubView(APIView):
             club.description = description
             if tag_ids:
                 club_tags = ClubTag.objects.filter(id__in=tag_ids)
-                club.tags.set(club_tags)
+                club.club_tags.set(club_tags)
 
             club.save()
-            serializer = BookClubSerializer(club)
+            serializer = BookClubSerializer(club, context={'request': request})
             return Response(serializer.data)
         except BookClub.DoesNotExist:
             return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)

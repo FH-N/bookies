@@ -1,187 +1,186 @@
-import api from "../api";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ACCESS_TOKEN, REFRESH_TOKEN } from "../token";
-import Line from "./ui/Line";
-import Button from "./ui/Button";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom"; // Use useNavigate instead of useHistory
+import BookClubPosts from "./BookClubPosts";
+import CreatePost from "./CreatePost";
 
-const AuthForm = ({ route, method }) => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("User");
-  const [loading, setLoading] = useState(false);
+const BookClubDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate(); // useNavigate hook to navigate programmatically
+  const [bookClubDetails, setBookClubDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false); // To toggle between view and edit mode
+  const [updatedName, setUpdatedName] = useState("");
+  const [updatedDescription, setUpdatedDescription] = useState("");
+  const [userIsOwner, setUserIsOwner] = useState(false); // Track if the current user is the owner
+
+  const accessToken = localStorage.getItem("access_token"); // Get the access token from localStorage
 
   useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => navigate("/login"), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, navigate]);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const res = await api.post(route, { username, password, email, role });
-      if (method === "login") {
-        localStorage.setItem(ACCESS_TOKEN, res.data.access);
-        localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-        navigate("/");
-        window.location.reload();
-      } else {
-        setSuccess("Registration successful. Please login.");
-      }
-    } catch (error) {
-      console.error(error);
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            setError("Invalid credentials.");
-            break;
-          case 400:
-            setError("Username or email already exists.");
-            break;
-          default:
-            setError("Something went wrong. Please try again.");
+    const fetchBookClubDetails = async () => {
+      try {
+        // Fetch the book club details
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/bookclubs/${id}/`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch book club details");
         }
-      } else if (error.request) {
-        setError("Network error. Please check your internet connection.");
-      } else {
-        setError("Something went wrong. Please try again.");
+        const data = await response.json();
+        setBookClubDetails(data);
+        setUpdatedName(data.name);
+        setUpdatedDescription(data.description);
+
+        // Fetch the current user details using the access token
+        const userResponse = await fetch(
+          `http://127.0.0.1:8000/api/user/`, // Your endpoint for user details
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`, // Send the access token in the header
+            },
+          }
+        );
+        if (!userResponse.ok) {
+          throw new Error("Failed to fetch user details");
+        }
+        const userData = await userResponse.json();
+
+        // Check if the current user is the owner of the book club
+        if (userData.username === data.owner) {
+          setUserIsOwner(true); // Set userIsOwner to true if they are the owner
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
+    };
+
+    fetchBookClubDetails();
+  }, [id, accessToken]);
+
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this book club?"
+    );
+    if (confirmDelete) {
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/bookclubs/${id}/`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`, // Send the access token for authentication
+            },
+          }
+        );
+        if (response.ok) {
+          alert("Book club deleted successfully!");
+          navigate("/bookclubs"); // Redirect to list of all book clubs using navigate
+        } else {
+          throw new Error("Failed to delete book club");
+        }
+      } catch (err) {
+        setError(err.message);
+      }
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8000/accounts/google/login/";
+  const handleUpdate = async () => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/bookclubs/${id}/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Send the access token for authentication
+          },
+          body: JSON.stringify({
+            name: updatedName,
+            description: updatedDescription,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update book club details");
+      }
+      const updatedData = await response.json();
+      setBookClubDetails(updatedData);
+      setIsEditing(false); // Exit edit mode
+    } catch (err) {
+      setError(err.message);
+    }
   };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="w-full h-full flex items-center justify-center px-4">
-      {loading && (
-        <div className="loading-indicator">
-          {error ? (
-            <span className="text-red-500">{error}</span>
-          ) : (
-            <div className="spinner"></div>
-          )}
+    <div className="container w-full min-h-[calc(100vh-4rem)]">
+      <h1 className="text-2xl font-bold">{bookClubDetails?.name}</h1>
+      <p className="text-gray-600">{bookClubDetails?.description}</p>
+      <p className="text-sm text-gray-500">
+        Created by: {bookClubDetails?.owner}
+      </p>
+      <p className="text-sm text-gray-500">
+        Members: {bookClubDetails?.members?.length || 0}
+      </p>
+
+      {/* Conditional rendering for editing */}
+      {isEditing ? (
+        <div>
+          <input
+            type="text"
+            value={updatedName}
+            onChange={(e) => setUpdatedName(e.target.value)}
+            className="border p-2 mt-2"
+            placeholder="Update Book Club Name"
+          />
+          <textarea
+            value={updatedDescription}
+            onChange={(e) => setUpdatedDescription(e.target.value)}
+            className="border p-2 mt-2 w-full"
+            placeholder="Update Book Club Description"
+          />
+          <button
+            onClick={handleUpdate}
+            className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Save Changes
+          </button>
+          <button
+            onClick={() => setIsEditing(false)}
+            className="mt-2 ml-2 bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
         </div>
-      )}
-      {!loading && (
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col justify-center items-center rounded-xl bg-white text-deep-purple shadow-md max-w-md w-full p-6 sm:p-8"
-        >
-          <h2 className="font-poppins text-xl p-2">
-            {method === "register" ? "Sign Up & Explore" : "Login & Explore"}
-          </h2>
-          <div className="flex flex-col items-center justify-center pb-4">
-            <div className="flex flex-row justify-between items-center w-44">
-              <h3
-                className={`cursor-pointer ${
-                  role === "User" ? "text-electric-indigo font-bold" : ""
-                }`}
-                onClick={() => setRole("User")}
-              >
-                Booker
-              </h3>
-              <h3
-                className={`cursor-pointer ${
-                  role === "Author" ? "text-electric-indigo font-bold" : ""
-                }`}
-                onClick={() => setRole("Author")}
-              >
-                Author
-              </h3>
-            </div>
-            <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
-          </div>
-          {error && <div className="text-red-500">{error}</div>}
-          {success && <div className="text-green-500">{success}</div>}
-          <div className="grid gap-4">
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              placeholder="username"
-              className="border-2 border-electric-indigo rounded-full w-full p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
-            />
-            {method === "register" && (
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="email"
-                className="border-2 border-electric-indigo rounded-full w-full p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
-              />
-            )}
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="password"
-              className="border-2 border-electric-indigo rounded-full w-full p-2 placeholder:text-electric-indigo placeholder:font-poppins placeholder:font-light"
-            />
-            <Button type="submit" disabled={loading}>
-              {loading
-                ? "Processing..."
-                : method === "register"
-                ? "Sign Up"
-                : "Login"}
-            </Button>
-            <h1 className="flex items-center justify-center text-xl">Or</h1>
-            <Button
-              type="button"
-              className="bg-pink-flower hover:bg-light-purple hover:text-white"
-              onClick={handleGoogleLogin}
+      ) : (
+        // Only show these buttons if the current user is the owner of the club
+        userIsOwner && (
+          <div className="mt-4">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="bg-yellow-500 text-white px-4 py-2 rounded"
             >
-              {method === "register"
-                ? "Register with Google"
-                : "Login with Google"}
-            </Button>
-            <Line className="border-deep-purple border-t-2 w-60 mx-auto" />
+              Edit Book Club
+            </button>
+            <button
+              onClick={handleDelete}
+              className="ml-2 bg-red-500 text-white px-4 py-2 rounded"
+            >
+              Delete Book Club
+            </button>
           </div>
-          {method === "login" && (
-            <p className="pt-2">
-              Don't have an account?
-              <span
-                className="font-semibold p-1 text-deep-purple cursor-pointer"
-                onClick={() => navigate("/register")}
-              >
-                Register
-              </span>
-            </p>
-          )}
-          {method === "register" && (
-            <p className="pt-2">
-              Already have an account?
-              <span
-                className="font-semibold p-1 text-deep-purple cursor-pointer"
-                onClick={() => navigate("/login")}
-              >
-                Login
-              </span>
-            </p>
-          )}
-        </form>
+        )
       )}
+
+      <CreatePost clubId={id} />
+      <BookClubPosts clubId={id} />
     </div>
   );
 };
 
-export default AuthForm;
+export default BookClubDetails;

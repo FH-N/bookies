@@ -17,6 +17,7 @@ class UserProfileInline(admin.StackedInline):
     can_delete = False
 
 class CustomUserAdmin(admin.ModelAdmin):
+    search_fields = ('username', 'email')
     inlines = (UserProfileInline,)
 
 class ReviewAdmin(admin.ModelAdmin):
@@ -35,12 +36,13 @@ class PostTagAdmin(admin.ModelAdmin):
 
 
 class BookClubAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'description', 'created_at')
-    search_fields = ('name', 'description')
+    list_display = ('id', 'name', 'owner', 'description', 'created_at')  # Added 'owner'
+    search_fields = ('name', 'description', 'owner__username')  # Allow searching by owner's username
     filter_horizontal = ('members', 'club_tags')  # For ManyToManyFields
-    list_filter = ('created_at',)
-    autocomplete_fields = ('club_tags',)  # Enables autocomplete for tags if there are many
-    raw_id_fields = ('members',) 
+    list_filter = ('created_at', 'owner')  # Allow filtering by owner
+    autocomplete_fields = ('club_tags', 'owner')  # Enable autocomplete for owner and tags
+    raw_id_fields = ('members',)  # Display raw IDs for members for performance optimization
+
 
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'role')

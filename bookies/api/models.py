@@ -72,6 +72,11 @@ class PostTag(models.Model):
 class BookClub(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    owner = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='owned_clubs'
+    ) 
     members = models.ManyToManyField(User, related_name='book_clubs')
     club_tags = models.ManyToManyField(ClubTag, related_name='book_clubs', blank=True)  # Tags for the club
     created_at = models.DateTimeField(auto_now_add=True)
