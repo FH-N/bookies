@@ -6,13 +6,12 @@ import BookSearch from "./pages/SearchPage";
 import BookInfo from "./components/BookInfo";
 import RecommendationPage from "./pages/RecommendationPage";
 import NotFound from "./pages/NotFound";
-import AuthPage from "./pages/AuthPage";
 import NavBar from "./components/ui/Navbar";
 import RedirectGoogleAuth from "./components/GoogleRedirectHandler";
 import ReviewForm from "./components/CreateReview";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
-import BookClubList from "./components/BookClubList";
+import BookClubList from "./pages/ClubsPage";
 import CreateClub from "./components/CreateClub";
 import BookClubDetails from "./components/BookClubDetails";
 

@@ -55,10 +55,18 @@ class UserProfile(models.Model):
         return f"{self.user.username}'s Profile"
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class BookClub(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     members = models.ManyToManyField(User, related_name='book_clubs')
+    tags = models.ManyToManyField(Tag, related_name='book_clubs', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

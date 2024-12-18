@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, Tag
 
 
 #User serializers
@@ -58,12 +58,23 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'created_at']
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']
+
+
 class BookClubSerializer(serializers.ModelSerializer):
     members = serializers.StringRelatedField(many=True)
+    tags = TagSerializer(many=True, read_only=True)  # Nested serializer for tags
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Tag.objects.all(), write_only=True, source='tags'
+    )  # For adding/updating tags by their IDs
 
     class Meta:
         model = BookClub
-        fields = ['id', 'name', 'description', 'members', 'created_at']
+        fields = ['id', 'name', 'description', 'members', 'tags', 'tag_ids', 'created_at']
+        
 
 class BookClubPostSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
