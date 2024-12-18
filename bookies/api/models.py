@@ -55,7 +55,14 @@ class UserProfile(models.Model):
         return f"{self.user.username}'s Profile"
 
 
-class Tag(models.Model):
+class ClubTag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class PostTag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
@@ -66,26 +73,29 @@ class BookClub(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     members = models.ManyToManyField(User, related_name='book_clubs')
-    tags = models.ManyToManyField(Tag, related_name='book_clubs', blank=True)
+    club_tags = models.ManyToManyField(ClubTag, related_name='book_clubs', blank=True)  # Tags for the club
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
 
 class BookClubPost(models.Model):
     club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='bookclub_posts')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='club_posts')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    post_tags = models.ManyToManyField(PostTag, related_name='bookclub_posts', blank=True)  # Separate post tags
 
     def __str__(self):
         return f"Post by {self.author.username} in {self.club.name}"
 
 
-class ClubPost(models.Model):  # Assuming this is another model you already have
+class ClubPost(models.Model): 
     club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='clubpost_posts')
     content = models.TextField()
 
     def __str__(self):
         return f"Post in {self.club.name}"
+
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -41,8 +41,7 @@ const BookClubList = () => {
         }
       )
       .then((response) => {
-        alert(response.data.message); // Show success message
-        // Update the club list to reflect the membership change
+        alert(response.data.message);
         setBookClubs((prevClubs) =>
           prevClubs.map((club) =>
             club.id === clubId ? { ...club, is_member: true } : club
@@ -50,18 +49,26 @@ const BookClubList = () => {
         );
       })
       .catch((err) => {
-        alert("Error joining book club");
+        // Handle error gracefully
+        if (err.response && err.response.data) {
+          const errorMessage =
+            err.response.data.message || "Error joining book club";
+          alert(errorMessage); // Show the error message from backend
+        } else {
+          alert("Error joining book club");
+        }
       });
   };
 
   // Navigate to BookClubDetails when clicked
-  const handleNavigateToDetails = (clubId) => {
-    navigate(`/bookclub/${clubId}`);
+  const handleNavigateToDetails = (id) => {
+    navigate(`/bookclubs/${id}`);
+    console.log("clubpage rendered", id);
   };
 
   // Navigate to CreateClub page
   const handleCreateClubRedirect = () => {
-    navigate("/createclub");
+    navigate("/createclub"); // Assuming this route exists for CreateClub
   };
 
   if (loading) {
@@ -98,14 +105,14 @@ const BookClubList = () => {
 
             {/* Display Tags */}
             <div className="mb-4">
-              {club.tags && club.tags.length > 0 ? (
+              {club.club_tags && club.club_tags.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {club.tags.map((tag) => (
+                  {club.club_tags.map((club_tag) => (
                     <span
-                      key={tag.id}
+                      key={club_tag.id}
                       className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm"
                     >
-                      {tag.name}
+                      {club_tag.name}
                     </span>
                   ))}
                 </div>
@@ -119,11 +126,9 @@ const BookClubList = () => {
                 {club.members_count}{" "}
                 {club.members_count === 1 ? "member" : "members"}
               </p>
-
-              {/* Conditionally render Join or Joined */}
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent parent click event
+                  e.stopPropagation();
                   if (!club.is_member) {
                     handleJoinBookClub(club.id);
                   }
@@ -133,7 +138,7 @@ const BookClubList = () => {
                     ? "bg-gray-400 text-white"
                     : "bg-blue-500 text-white"
                 } px-4 py-2 rounded-lg`}
-                disabled={club.is_member} // Disable if already a member
+                disabled={club.is_member}
               >
                 {club.is_member ? "Joined" : "Join"}
               </button>

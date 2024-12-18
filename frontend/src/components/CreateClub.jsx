@@ -12,7 +12,7 @@ const CreateClub = () => {
   // Fetch tags from the backend
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/tags/")
+      .get("http://127.0.0.1:8000/api/clubtags/")
       .then((response) => {
         setTags(response.data);
       })
@@ -67,7 +67,7 @@ const CreateClub = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg">
+    <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg max-h-screen">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Create a Book Club
       </h2>

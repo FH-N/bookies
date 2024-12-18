@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, Tag
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag
 
 
 #User serializers
@@ -58,28 +58,46 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'created_at']
 
 
-class TagSerializer(serializers.ModelSerializer):
+class ClubTagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tag
+        model = ClubTag
         fields = ['id', 'name']
 
 
 class BookClubSerializer(serializers.ModelSerializer):
     members = serializers.StringRelatedField(many=True)
-    tags = TagSerializer(many=True, read_only=True)  # Nested serializer for tags
+    club_tags = ClubTagSerializer(many=True, read_only=True)  # Nested serializer for tags
     tag_ids = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Tag.objects.all(), write_only=True, source='tags'
-    )  # For adding/updating tags by their IDs
+        many=True, queryset=ClubTag.objects.all(), write_only=True, source='club_tags'
+    )  
+
+    is_member = serializers.SerializerMethodField()
 
     class Meta:
         model = BookClub
-        fields = ['id', 'name', 'description', 'members', 'tags', 'tag_ids', 'created_at']
-        
+        fields = ['id', 'name', 'description', 'members', 'club_tags', 'tag_ids', 'created_at', 'is_member']
+
+    def get_is_member(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.members.filter(id=request.user.id).exists()
+        return False
+
+from rest_framework import serializers
+from .models import BookClubPost, PostTag
+
+class PostTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostTag
+        fields = ['id', 'name']  # Serialize the PostTag model with 'id' and 'name'
+
 
 class BookClubPostSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
     created_at = serializers.ReadOnlyField()
+    post_tags = PostTagSerializer(many=True, read_only=True)  # Add PostTagSerializer to include post tags
 
     class Meta:
         model = BookClubPost
-        fields = ['id', 'club', 'author', 'content', 'created_at']
+        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags']  # Add post_tags to the list of fields
+

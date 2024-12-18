@@ -12,15 +12,15 @@ from rest_framework.decorators import action
 from rest_framework import generics, status
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, Tag
-from .serializers import ReviewSerializer, UserSerializer ,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer, BookClubSerializer, BookClubPostSerializer, TagSerializer
+from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag
+from .serializers import ReviewSerializer, UserSerializer ,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer, BookClubSerializer, BookClubPostSerializer, ClubTagSerializer, PostTagSerializer
 
 from django.contrib.auth import authenticate
 
@@ -332,26 +332,26 @@ class LoginAPIView(APIView):
             return Response({'detail': 'Account is disabled.'}, status=403)
         return Response({'detail': 'Invalid credentials.'}, status=401)
 
-class TagView(APIView):
+class ClubTagView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, pk=None):
         # Get a single tag or list all tags
         if pk:
             try:
-                tag = Tag.objects.get(pk=pk)
-                serializer = TagSerializer(tag)
+                tag = ClubTag.objects.get(pk=pk)
+                serializer = ClubTagSerializer(tag)
                 return Response(serializer.data)
-            except Tag.DoesNotExist:
+            except ClubTag.DoesNotExist:
                 return Response({"error": "Tag not found"}, status=status.HTTP_404_NOT_FOUND)
         else:
-            tags = Tag.objects.all()
-            serializer = TagSerializer(tags, many=True)
+            club_tags = ClubTag.objects.all()
+            serializer = ClubTagSerializer(club_tags, many=True)
             return Response(serializer.data)
 
     def post(self, request):
         # Create a new tag
-        serializer = TagSerializer(data=request.data)
+        serializer = ClubTagSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -360,26 +360,46 @@ class TagView(APIView):
     def put(self, request, pk):
         # Update an existing tag
         try:
-            tag = Tag.objects.get(pk=pk)
-            serializer = TagSerializer(tag, data=request.data)
+            tag = ClubTag.objects.get(pk=pk)
+            serializer = ClubTagSerializer(tag, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Tag.DoesNotExist:
+        except ClubTag.DoesNotExist:
             return Response({"error": "Tag not found"}, status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, pk):
         # Delete a tag
         try:
-            tag = Tag.objects.get(pk=pk)
+            tag = ClubTag.objects.get(pk=pk)
             tag.delete()
             return Response({"message": "Tag deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        except Tag.DoesNotExist:
+        except ClubTag.DoesNotExist:
             return Response({"error": "Tag not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# BookClubView with CRUD Functionality
+# Custom Permissions
+class IsClubOwnerOrAdmin(BasePermission):
+    """
+    Custom permission to only allow the owner of the club (or an admin) to delete or modify a book club.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Check if the user is the owner of the book club or is an admin
+        if request.user == obj.owner or request.user.is_staff:
+            return True
+        return False
+
+class IsPostOwnerOrAdmin(BasePermission):
+    """
+    Custom permission to only allow the author of the post (or an admin) to modify or delete the post.
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.user == obj.author or request.user.is_staff:
+            return True
+        return False
+
+
 class BookClubView(APIView):
     permission_classes = [AllowAny]
 
@@ -388,20 +408,24 @@ class BookClubView(APIView):
         if pk:
             try:
                 club = BookClub.objects.get(pk=pk)
-                serializer = BookClubSerializer(club)
+                serializer = BookClubSerializer(club, context={'request': request})
                 return Response(serializer.data)
             except BookClub.DoesNotExist:
                 return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
         else:
             clubs = BookClub.objects.all()
-            serializer = BookClubSerializer(clubs, many=True)
+            serializer = BookClubSerializer(clubs, many=True, context={'request': request})
             return Response(serializer.data)
 
     def post(self, request):
-        # Create a new book club
+        # Ensure required fields are provided
         data = request.data
         name = data.get('name')
         description = data.get('description')
+
+        if not name or not description:
+            return Response({"error": "Both 'name' and 'description' are required."}, status=status.HTTP_400_BAD_REQUEST)
+
         tag_ids = data.get('tag_ids', [])
 
         club = BookClub.objects.create(
@@ -411,26 +435,32 @@ class BookClubView(APIView):
         club.members.add(request.user)
 
         if tag_ids:
-            tags = Tag.objects.filter(id__in=tag_ids)
-            club.tags.set(tags)
+            club_tags = ClubTag.objects.filter(id__in=tag_ids)
+            club.club_tags.set(club_tags)
 
         serializer = BookClubSerializer(club)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
-        # Update an existing book club
+        # Update book club only if the user is the owner or admin
         try:
             club = BookClub.objects.get(pk=pk)
+            self.check_object_permissions(request, club)  # Check ownership or admin status
+
             data = request.data
             name = data.get('name', club.name)
             description = data.get('description', club.description)
+
+            if not name or not description:
+                return Response({"error": "Both 'name' and 'description' are required."}, status=status.HTTP_400_BAD_REQUEST)
+
             tag_ids = data.get('tag_ids', [])
 
             club.name = name
             club.description = description
             if tag_ids:
-                tags = Tag.objects.filter(id__in=tag_ids)
-                club.tags.set(tags)
+                club_tags = ClubTag.objects.filter(id__in=tag_ids)
+                club.tags.set(club_tags)
 
             club.save()
             serializer = BookClubSerializer(club)
@@ -439,14 +469,15 @@ class BookClubView(APIView):
             return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
 
     def delete(self, request, pk):
-        # Delete a book club
+        # Delete book club only if the user is the owner or admin
         try:
             club = BookClub.objects.get(pk=pk)
+            self.check_object_permissions(request, club)  # Check ownership or admin status
             club.delete()
             return Response({"message": "Book club deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except BookClub.DoesNotExist:
             return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
 
 class JoinBookClubView(APIView):
     permission_classes = [IsAuthenticated]
@@ -460,6 +491,8 @@ class JoinBookClubView(APIView):
             return Response({"message": f"You've joined {club.name}!"}, status=status.HTTP_200_OK)
         except BookClub.DoesNotExist:
             raise NotFound("Book club not found")
+        except ValidationError as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LeaveBookClubView(APIView):
@@ -474,6 +507,55 @@ class LeaveBookClubView(APIView):
             return Response({"message": f"You've left {club.name}!"}, status=status.HTTP_200_OK)
         except BookClub.DoesNotExist:
             raise NotFound("Book club not found")
+
+
+class PostTagView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve all post tags.
+        """
+        post_tags = PostTag.objects.all()
+        serializer = PostTagSerializer(post_tags, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        """
+        Create a new post tag.
+        """
+        serializer = PostTagSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, tag_id):
+        """
+        Update an existing post tag by its ID.
+        """
+        try:
+            post_tag = PostTag.objects.get(id=tag_id)
+        except PostTag.DoesNotExist:
+            return Response({"error": "Post tag not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PostTagSerializer(post_tag, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, tag_id):
+        """
+        Delete a post tag by its ID.
+        """
+        try:
+            post_tag = PostTag.objects.get(id=tag_id)
+        except PostTag.DoesNotExist:
+            return Response({"error": "Post tag not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        post_tag.delete()
+        return Response({"message": "Post tag deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
 class BookClubPostView(APIView):
@@ -494,14 +576,46 @@ class BookClubPostView(APIView):
             if request.user not in club.members.all():
                 return Response({"error": "You must be a member of this club to post"}, status=status.HTTP_403_FORBIDDEN)
 
+            content = request.data.get('content')
+            if not content:
+                return Response({"error": "'content' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            post_tag_ids = request.data.get('post_tags', [])
+            post_tags = PostTag.objects.filter(id__in=post_tag_ids)
+
             data = request.data.copy()
             data['club'] = club.id
             data['author'] = request.user.id
 
             serializer = BookClubPostSerializer(data=data)
             if serializer.is_valid():
-                serializer.save(author=request.user, club=club)
+                post = serializer.save(author=request.user, club=club)
+                post.post_tags.set(post_tags)
+                post.save()
+
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except BookClub.DoesNotExist:
             return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, post_id):
+        try:
+            post = BookClubPost.objects.get(id=post_id)
+            self.check_object_permissions(request, post)  # Check ownership or admin status
+
+            serializer = BookClubPostSerializer(post, data=request.data, partial=True)
+            if serializer.is_valid():
+                post = serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except BookClubPost.DoesNotExist:
+            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, post_id):
+        try:
+            post = BookClubPost.objects.get(id=post_id)
+            self.check_object_permissions(request, post)  # Check ownership or admin status
+            post.delete()
+            return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        except BookClubPost.DoesNotExist:
+            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)

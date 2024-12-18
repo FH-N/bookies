@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, BookClubView, JoinBookClubView, LeaveBookClubView, BookClubPostView, TagView
+from .views import BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, BookClubView, JoinBookClubView, LeaveBookClubView, BookClubPostView, ClubTagView, PostTagView
 
 router = DefaultRouter()
 
@@ -23,8 +23,10 @@ urlpatterns = [
     path('bookclubs/join/<int:club_id>/', JoinBookClubView.as_view(), name='join_book_club'), 
     path('bookclubs/leave/<int:club_id>/', LeaveBookClubView.as_view(), name='leave_book_club'),  
     path('bookclubs/<int:club_id>/posts/', BookClubPostView.as_view(), name='bookclub-posts'),
-    path('tags/', TagView.as_view(), name='tags-list-create'),
-    path('tags/<int:pk>/', TagView.as_view(), name='tag-detail-update-delete'),
+    path('clubtags/', ClubTagView.as_view(), name='clubtags-list-create'),
+    path('clubtags/<int:pk>/', ClubTagView.as_view(), name='clubtag-detail-update-delete'),
+    path('posttags/', PostTagView.as_view(), name='posttags-list-create'),
+    path('posttags/<int:pk>/', PostTagView.as_view(), name='posttag-detail-update-delete'),
 
     path('', include(router.urls)),  
 ]

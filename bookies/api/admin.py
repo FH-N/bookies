@@ -7,7 +7,8 @@ from .models import (
     ReviewLike, 
     ReviewDisLike, 
     BookClub, 
-    Tag,
+    ClubTag,
+    PostTag,
 )
 
 # Inline UserProfile for User
@@ -24,7 +25,11 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ('rating', 'created_at')
 
 
-class TagAdmin(admin.ModelAdmin):
+class ClubTagAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+class PostTagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
@@ -32,9 +37,9 @@ class TagAdmin(admin.ModelAdmin):
 class BookClubAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'created_at')
     search_fields = ('name', 'description')
-    filter_horizontal = ('members', 'tags')  # For ManyToManyFields
+    filter_horizontal = ('members', 'club_tags')  # For ManyToManyFields
     list_filter = ('created_at',)
-    autocomplete_fields = ('tags',)  # Enables autocomplete for tags if there are many
+    autocomplete_fields = ('club_tags',)  # Enables autocomplete for tags if there are many
     raw_id_fields = ('members',) 
 
 class UserProfileAdmin(admin.ModelAdmin):
@@ -47,7 +52,8 @@ admin.site.register(ReviewLike)
 admin.site.register(ReviewDisLike)
 admin.site.register(BookClub, BookClubAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
-admin.site.register(Tag, TagAdmin)
+admin.site.register(ClubTag, ClubTagAdmin)
+admin.site.register(PostTag, PostTagAdmin)
 
 # Unregister the default User admin and register the custom one
 admin.site.unregister(User)

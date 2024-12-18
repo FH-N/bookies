@@ -56,7 +56,7 @@ const App = () => {
           <Route path="/" element={<ConditionalHome />} />
           <Route path="/recommendation" element={<RecommendationPage />} />
           <Route path="/bookclubs" element={<BookClubList />} />
-          <Route path="/bookclub/:id" element={<BookClubDetails />} />
+          <Route path="/bookclubs/:id" element={<BookClubDetails />} />
           <Route path="/createclub" element={<CreateClub />} />
         </Routes>
       </div>
