@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import BookClubPosts from "./BookClubPosts";
+import BookClubPostsList from "./BookClubPostsList";
 import CreatePost from "./CreatePost";
 
 const BookClubDetails = () => {
@@ -189,7 +189,7 @@ const BookClubDetails = () => {
       )}
 
       <CreatePost clubId={id} />
-      <BookClubPosts clubId={id} />
+      <BookClubPostsList clubId={id} />
     </div>
   );
 };

@@ -23,6 +23,7 @@ urlpatterns = [
     path('bookclubs/join/<int:club_id>/', JoinBookClubView.as_view(), name='join_book_club'), 
     path('bookclubs/leave/<int:club_id>/', LeaveBookClubView.as_view(), name='leave_book_club'),  
     path('bookclubs/<int:club_id>/posts/', BookClubPostView.as_view(), name='bookclub-posts'),
+    path('bookclubs/<int:club_id>/posts/<int:post_id>/', BookClubPostView.as_view(), name='bookclub-post-detail'),
     path('clubtags/', ClubTagView.as_view(), name='clubtags-list-create'),
     path('clubtags/<int:pk>/', ClubTagView.as_view(), name='clubtag-detail-update-delete'),
     path('posttags/', PostTagView.as_view(), name='posttags-list-create'),

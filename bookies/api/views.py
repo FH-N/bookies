@@ -577,15 +577,27 @@ class PostTagView(APIView):
 class BookClubPostView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, club_id):
-        try:
-            club = BookClub.objects.get(id=club_id)
-            posts = BookClubPost.objects.filter(club=club).order_by('-created_at')
-            serializer = BookClubPostSerializer(posts, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except BookClub.DoesNotExist:
-            return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
+    # Get all posts in a book club or a specific post if post_id is provided
+    def get(self, request, club_id, post_id=None):
+        if post_id:
+            # Fetch a single post by post_id
+            try:
+                post = BookClubPost.objects.get(id=post_id, club_id=club_id)
+                serializer = BookClubPostSerializer(post)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except BookClubPost.DoesNotExist:
+                return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Fetch all posts in the book club
+            try:
+                club = BookClub.objects.get(id=club_id)
+                posts = BookClubPost.objects.filter(club=club).order_by('-created_at')
+                serializer = BookClubPostSerializer(posts, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except BookClub.DoesNotExist:
+                return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    # Create a post in the book club
     def post(self, request, club_id):
         try:
             club = BookClub.objects.get(id=club_id)
@@ -614,9 +626,10 @@ class BookClubPostView(APIView):
         except BookClub.DoesNotExist:
             return Response({"error": "Book club not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    def put(self, request, post_id):
+    # Update a specific post by ID (PUT method)
+    def put(self, request, club_id, post_id):
         try:
-            post = BookClubPost.objects.get(id=post_id)
+            post = BookClubPost.objects.get(id=post_id, club_id=club_id)
             self.check_object_permissions(request, post)  # Check ownership or admin status
 
             serializer = BookClubPostSerializer(post, data=request.data, partial=True)
@@ -627,9 +640,10 @@ class BookClubPostView(APIView):
         except BookClubPost.DoesNotExist:
             return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    def delete(self, request, post_id):
+    # Delete a specific post by ID (DELETE method)
+    def delete(self, request, club_id, post_id):
         try:
-            post = BookClubPost.objects.get(id=post_id)
+            post = BookClubPost.objects.get(id=post_id, club_id=club_id)
             self.check_object_permissions(request, post)  # Check ownership or admin status
             post.delete()
             return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
