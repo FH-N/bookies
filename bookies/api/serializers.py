@@ -21,6 +21,35 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+    def update(self, instance, validated_data):
+        """
+        Update the user fields: username, email, password, and profile fields like role and bio.
+        """
+        # Update user fields
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+
+        # Update password if provided
+        password = validated_data.get('password', None)
+        if password:
+            instance.set_password(password)  # Hash the new password securely
+
+        # Save the updated user instance
+        instance.save()
+
+        # Update UserProfile fields (role, bio)
+        profile_data = self.context['request'].data  # Directly fetch extra fields like role & bio
+        profile = instance.profile  # Assumes a OneToOne relationship exists with UserProfile
+
+        role = profile_data.get('role', profile.role)
+        bio = profile_data.get('bio', profile.bio)
+
+        profile.role = role
+        profile.bio = bio
+        profile.save()
+
+        return instance
+
 class ReviewReplySerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
 
@@ -28,6 +57,7 @@ class ReviewReplySerializer(serializers.ModelSerializer):
         model = ReviewReply
         fields = ['id', 'user', 'content', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
+
 
 class ReviewLikeSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()

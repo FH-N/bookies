@@ -17,7 +17,7 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, BookClub, BookClubMembership, BookClubDiscussion,ReviewReply,ReviewLike,ReviewDisLike
+from .models import Review, BookClub, BookClubMembership, BookClubDiscussion,ReviewReply,ReviewLike,ReviewDisLike, UserProfile
 from .serializers import ReviewSerializer, UserSerializer, BookClubSerializer, BookClubMembershipSerializer, BookClubDiscussionSerializer,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer
 
 from django.contrib.auth import authenticate
@@ -380,3 +380,117 @@ class LoginAPIView(APIView):
                 })
             return Response({'detail': 'Account is disabled.'}, status=403)
         return Response({'detail': 'Invalid credentials.'}, status=401)
+    
+class UserDetailByUsernameAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Extract username from query parameters
+        username = request.query_params.get('username')
+
+        if not username:
+            return Response({"error": "Username is required as a query parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Fetch the user and related profile
+            user = User.objects.get(username=username)
+            profile = user.profile  # Assuming UserProfile exists with a OneToOne relationship
+
+            # Prepare the response data
+            response_data = {
+                "username": user.username,
+                "email": user.email,
+                "password": user.password,  # Hashed password for reference
+                "role": profile.role if profile else None,
+                "bio": profile.bio if profile else None,
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class UserDetailByUserIdAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Extract username from query parameters
+        userId = request.query_params.get('user_id')
+
+        if not userId:
+            return Response({"error": "userId is required as a query parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Fetch the user and related profile
+            user = User.objects.get(id=userId)
+            profile = user.profile  # Assuming UserProfile exists with a OneToOne relationship
+
+            # Prepare the response data
+            response_data = {
+                "username": user.username,
+                "email": user.email,
+                "password": user.password,  # Hashed password for reference
+                "role": profile.role if profile else None,
+                "bio": profile.bio if profile else None,
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UpdateUserAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Update user details (username, email, password) and UserProfile fields (role, bio).
+        """
+        #user = request.user  # Get the currently logged-in user
+
+        # Fetch data from the request
+        username = request.data.get('username', None)
+        email = request.data.get('email', None)
+        #password = request.data.get('password', None)
+        role = request.data.get('role', None)
+        bio = request.data.get('bio', None)
+
+        try:
+            # Check for username conflict with another user
+            user = User.objects.get(username=username)
+
+            # Update user fields
+            user.username = username
+            user.email = email
+            #if password:
+            #    user.password = password # Securely update the password
+            user.save()
+
+            # Update UserProfile fields
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            if role:
+                profile.role = role
+            if bio:
+                profile.bio = bio
+            profile.save()
+
+            return Response({"message": "User updated successfully."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class AuthorListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        authors = UserProfile.objects.filter(role='Author')  # Filter authors
+        author_list = [
+            {
+                "userid": author.user.id,
+                "username": author.user.username,
+                "email": author.user.email,
+                "role": author.role,
+                "bio": author.bio,
+            }
+            for author in authors
+        ]
+        return Response(author_list, status=status.HTTP_200_OK)

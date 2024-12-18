@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookClubMembershipViewSet, BookClubDiscussionViewSet, BookClubViewSet , BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply
+from .views import AuthorListView, BookClubMembershipViewSet, BookClubDiscussionViewSet, BookClubViewSet , BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, UpdateUserAPIView, UserDetailByUserIdAPIView, UserDetailByUsernameAPIView
 
 router = DefaultRouter()
 router.register(r'book-clubs', BookClubViewSet)
@@ -20,6 +20,9 @@ urlpatterns = [
     path('books/<str:google_books_id>/reviews/', BookReviewsView.as_view(), name='book_reviews'),
     path('reviews/<int:review_id>/dislike/', DislikeReview.as_view(), name='dislike_review'),
     path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-review"),
+    path('user/', UserDetailByUserIdAPIView.as_view(), name='user-detail-by-userid'),
+    path('update-user/', UpdateUserAPIView.as_view(), name='update-user'),
+    path('authors/', AuthorListView.as_view(), name='author-list'),
 
     path('', include(router.urls)),  
 ]

@@ -12,6 +12,7 @@ import RedirectGoogleAuth from "./components/GoogleRedirectHandler";
 import ReviewForm from "./components/CreateReview";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
+import UserProfilePage from "./pages/UserProfilePage";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
@@ -53,6 +54,7 @@ const App = () => {
           <Route path="/review" element={<ReviewForm />} />
           <Route path="/" element={<ConditionalHome />} />
           <Route path="/recommendation" element={<RecommendationPage />} />
+          <Route path="/profile" element={<UserProfilePage />} />
         </Routes>
       </div>
     </Router>

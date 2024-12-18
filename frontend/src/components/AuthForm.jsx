@@ -28,11 +28,14 @@ const AuthForm = ({ route, method }) => {
     setError(null);
     setSuccess(null);
 
+    console.log("submit");
     try {
       const res = await api.post(route, { username, password, email, role });
+      console.log(res);
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
+      
         navigate("/");
         window.location.reload();
       } else {
