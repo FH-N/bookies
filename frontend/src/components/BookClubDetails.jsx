@@ -13,6 +13,7 @@ const BookClubDetails = () => {
   const [updatedName, setUpdatedName] = useState("");
   const [updatedDescription, setUpdatedDescription] = useState("");
   const [userIsOwner, setUserIsOwner] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
     const fetchBookClubDetails = async () => {
@@ -54,6 +55,16 @@ const BookClubDetails = () => {
         const currentUserData = await currentUser.json();
         if (currentUserData.username === data.owner) {
           setUserIsOwner(true);
+        }
+        console.log(data.members);
+        console.log(currentUserData.username);
+
+        // Check if the current user is a member of the book club
+        if (
+          data.members.some((member) => member === currentUserData.username)
+        ) {
+          console.log("here");
+          setIsMember(true);
         }
       } catch (err) {
         setError(err.message);
@@ -127,6 +138,38 @@ const BookClubDetails = () => {
     }
   };
 
+  const handleLeave = async () => {
+    const confirmLeave = window.confirm(
+      "Are you sure you want to leave this book club?"
+    );
+    if (confirmLeave) {
+      try {
+        const accessToken = localStorage.getItem("access");
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/bookclubs/leave/${id}/`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          alert("You have left the book club.");
+          setIsMember(false);
+          navigate("/bookclubs");
+        } else {
+          throw new Error("Failed to leave the book club");
+        }
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -186,6 +229,16 @@ const BookClubDetails = () => {
             </button>
           </div>
         )
+      )}
+
+      {/* Leave Club Button */}
+      {isMember && !userIsOwner && (
+        <button
+          onClick={handleLeave}
+          className="mt-4 bg-red-500 text-white px-4 py-2 rounded"
+        >
+          Leave Book Club
+        </button>
       )}
 
       <CreatePost clubId={id} />
