@@ -2,18 +2,22 @@ import { IconSettings } from "@tabler/icons-react";
 import Streak from "../components/Streak";
 import SideNav from "../components/ui/SideNav";
 import Line from "../components/ui/Line";
+import RecommendedCategory from "../components/RecommendedCategory";
+import { useAuthentication } from "../auth";
 
 const HomePage = () => {
+  const { user } = useAuthentication();
+
   return (
     <div className="container flex flex-row mt-8 text-white font-poppins">
-      <div className="w-1/4 bg-blue-500">
+      <div className="w-1/4">
         <SideNav />
       </div>
-      <div className="w-2/4 bg-red-500 flex flex-col">
+      <div className="w-2/4 flex flex-col">
         <h1 className="text-3xl font-bold p-3">
           Welcome back&nbsp;
           <span className="text-3xl font-bold bg-gradient-to-b from-aqua-teal to-light-purple bg-clip-text text-transparent">
-            Farida!
+            {user?.username || "User"}
           </span>
         </h1>
         <Streak />
@@ -38,8 +42,10 @@ const HomePage = () => {
             </div>
           </div>
         </div>
+        <RecommendedCategory searchTerms="Romance" />
+        <RecommendedCategory searchTerms="Fantasy" />
       </div>
-      <div className="w-1/4 bg-yellow-300"></div>
+      <div className="w-1/4"></div>
     </div>
   );
 };

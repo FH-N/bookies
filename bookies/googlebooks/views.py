@@ -30,10 +30,15 @@ def search_books(request):
             'authors': ", ".join(volume.get('authors', [])),
             'thumbnail': volume.get('imageLinks', {}).get('thumbnail', ''),
             'infoLink': volume.get('infoLink', '#'),
-            'rating': volume.get('averageRating', 'No rating available')
+            'rating': volume.get('averageRating', 'No rating available'),
+            'pageCount': volume.get('pageCount', 'No page count available'),
+            'publicationDate': volume.get('publishedDate', 'No publication date available'),
+            'description': volume.get('description', 'No description available'),
+            'categories': ", ".join(volume.get('categories', []))
         })
 
     return JsonResponse({'books': books})
+
 
 
 @require_POST

@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      backgroundImage: {
+        "landing-page": "url('src//assets/book-cover-bg.png')",
+      },
       fontFamily: {
         poppins: ["Poppins", ...defaultTheme.fontFamily.sans],
         "roboto-mono": ["Roboto Mono", ...defaultTheme.fontFamily.mono],
