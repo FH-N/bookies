@@ -11,6 +11,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
+    navigate("/");
   };
 
   // Handle form submission (search bar)
@@ -59,7 +60,7 @@ function Navbar() {
 
           {/* Auth Links */}
           {isAuthorized ? (
-            <Link onClick={handleLogout} to="/" className="text-white">
+            <Link onClick={handleLogout} to="/logout" className="text-white">
               Logout
             </Link>
           ) : (

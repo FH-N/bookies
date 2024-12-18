@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const CreateClub = () => {
   const [clubName, setClubName] = useState("");
@@ -8,6 +9,7 @@ const CreateClub = () => {
   const [selectedTags, setSelectedTags] = useState([]); // User-selected tags
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Fetch tags from the backend
   useEffect(() => {
@@ -59,6 +61,10 @@ const CreateClub = () => {
         setClubName("");
         setDescription("");
         setSelectedTags([]);
+
+        // Redirect to the new book club page after creation
+        const clubId = response.data.id; // Assuming the club ID is returned in the response
+        navigate(`/bookclubs/${clubId}`); // Redirect to the created club's page
       })
       .catch((err) => {
         setError("Failed to create book club");
