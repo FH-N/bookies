@@ -19,7 +19,7 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag
+from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, Followings, UserProfile
 from .serializers import ReviewSerializer, UserSerializer ,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer, BookClubSerializer, BookClubPostSerializer, ClubTagSerializer, PostTagSerializer
 
 from django.contrib.auth import authenticate
@@ -339,6 +339,7 @@ class LoginAPIView(APIView):
                 })
             return Response({'detail': 'Account is disabled.'}, status=403)
         return Response({'detail': 'Invalid credentials.'}, status=401)
+    
 
 class ClubTagView(APIView):
     permission_classes = [AllowAny]
@@ -649,3 +650,285 @@ class BookClubPostView(APIView):
             return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except BookClubPost.DoesNotExist:
             return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        
+class UserDetailByUsernameAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Extract username from query parameters
+        username = request.query_params.get('username')
+
+        if not username:
+            return Response({"error": "Username is required as a query parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Fetch the user and related profile
+            user = User.objects.get(username=username)
+            profile = user.profile  # Assuming UserProfile exists with a OneToOne relationship
+
+            # Prepare the response data
+            response_data = {
+                "username": user.username,
+                "email": user.email,
+                "password": user.password,  # Hashed password for reference
+                "role": profile.role if profile else None,
+                "bio": profile.bio if profile else None,
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class UserDetailByUserIdAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Extract username from query parameters
+        userId = request.query_params.get('user_id')
+
+        if not userId:
+            return Response({"error": "userId is required as a query parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Fetch the user and related profile
+            user = User.objects.get(id=userId)
+            profile = user.profile  # Assuming UserProfile exists with a OneToOne relationship
+
+            # Prepare the response data
+            response_data = {
+                "username": user.username,
+                "email": user.email,
+                "password": user.password,  # Hashed password for reference
+                "role": profile.role if profile else None,
+                "bio": profile.bio if profile else None,
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UpdateUserAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Update user details (username, email, password) and UserProfile fields (role, bio).
+        """
+        #user = request.user  # Get the currently logged-in user
+
+        # Fetch data from the request
+        username = request.data.get('username', None)
+        email = request.data.get('email', None)
+        #password = request.data.get('password', None)
+        role = request.data.get('role', None)
+        bio = request.data.get('bio', None)
+
+        try:
+            # Check for username conflict with another user
+            user = User.objects.get(username=username)
+
+            # Update user fields
+            user.username = username
+            user.email = email
+            #if password:
+            #    user.password = password # Securely update the password
+            user.save()
+
+            # Update UserProfile fields
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            if role:
+                profile.role = role
+            if bio:
+                profile.bio = bio
+            profile.save()
+
+            return Response({"message": "User updated successfully."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class AuthorListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        authors = UserProfile.objects.filter(role='Author')  # Filter authors
+        author_list = [
+            {
+                "userid": author.user.id,
+                "username": author.user.username,
+                "email": author.user.email,
+                "role": author.role,
+                "bio": author.bio,
+            }
+            for author in authors
+        ]
+        return Response(author_list, status=status.HTTP_200_OK)
+    
+    
+class AllUsersListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        excluded_user_id = request.query_params.get('user_id')  # Get the user_id to exclude from query params
+
+        if not excluded_user_id:
+            return Response({"error": "user_id is required as a query parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            excluded_user_id = int(excluded_user_id)
+        except ValueError:
+            return Response({"error": "user_id must be a valid integer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Exclude the user with the given user_id
+        users = User.objects.exclude(id=excluded_user_id)
+
+        user_list = [
+            {
+                "userid": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": getattr(user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
+                "bio": getattr(user.profile, 'bio', None),      # Get bio from UserProfile if available
+            }
+            for user in users
+        ]
+
+        return Response(user_list, status=status.HTTP_200_OK)
+
+
+class FollowAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        user_id = request.data.get("user_id")
+        followed_user_id = request.data.get("followed_user_id")
+
+        # Check if both user IDs are provided
+        if not user_id or not followed_user_id:
+            return Response({"error": "Both user_id and followed_user_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Fetch user objects
+            user = User.objects.get(id=user_id)
+            followed_user = User.objects.get(id=followed_user_id)
+
+            # Prevent self-following
+            if user == followed_user:
+                return Response({"error": "Users cannot follow themselves."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create a follow relationship
+            following, created = Followings.objects.get_or_create(user=user, followed_user=followed_user)
+            if created:
+                return Response({"message": f"{user.username} successfully followed {followed_user.username}."}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"error": "Follow relationship already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        except User.DoesNotExist:
+            return Response({"error": "One or both users do not exist."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    
+class UnfollowAPIView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        user_id = request.data.get('user_id')  # The ID of the user performing the unfollow
+        followed_user_id = request.data.get('followed_user_id')  # The ID of the user to be unfollowed
+
+        # Validate both user IDs
+        try:
+            user = User.objects.get(id=user_id)
+            followed_user = User.objects.get(id=followed_user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid user ID(s) provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the follow relationship exists
+        try:
+            follow = Followings.objects.get(user=user, followed_user=followed_user)
+        except Followings.DoesNotExist:
+            return Response({"error": "Follow relationship does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Remove the follow relationship
+        follow.delete()
+
+        return Response({"message": f"{user.username} successfully unfollowed {followed_user.username}."}, status=status.HTTP_200_OK)
+    
+class FollowingsListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, user_id):
+        try:
+            # Validate the current_user_id
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid user_id provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get all users the current user is following
+        followings = Followings.objects.filter(user=user).select_related('followed_user')
+
+        # Prepare the response data
+        following_list = [
+            {
+                "followed_user_id": following.followed_user.id,
+                "username": following.followed_user.username,
+                "email": following.followed_user.email,
+                "role": getattr(following.followed_user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
+                "bio": getattr(following.followed_user.profile, 'bio', None),      # Get bio from UserProfile if available
+            }
+            for following in followings
+        ]
+
+        return Response(following_list, status=status.HTTP_200_OK)
+    
+class FollowersListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, user_id):
+        try:
+            # Validate the user_id
+            followed_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid user_id provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get all users following the specified user
+        followers = Followings.objects.filter(followed_user=followed_user).select_related('user')
+
+        # Prepare the response data
+        followers_list = [
+            {
+                "follower_user_id": follower.user.id,
+                "username": follower.user.username,
+                "email": follower.user.email,
+                "role": getattr(follower.user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
+                "bio": getattr(follower.user.profile, 'bio', None),      # Get bio from UserProfile if available
+            }
+            for follower in followers
+        ]
+
+        return Response(followers_list, status=status.HTTP_200_OK)
+    
+
+class FollowingStatsAPIView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request ,user_id):
+        try:
+            user = User.objects.get(id=user_id)  # Validate the user_id
+        except User.DoesNotExist:
+            return Response({"error": "Invalid user ID provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Number of users this user is following
+        following_count = Followings.objects.filter(user=user).count()
+
+        # Number of users following this user
+        followers_count = Followings.objects.filter(followed_user=user).count()
+
+        return Response(
+            {
+                "following_count": following_count,
+                "followers_count": followers_count,
+            },
+            status=status.HTTP_200_OK
+
+        )
+

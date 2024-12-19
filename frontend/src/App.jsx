@@ -14,6 +14,10 @@ import HomePage from "./pages/HomePage";
 import BookClubList from "./pages/ClubsPage";
 import CreateClub from "./components/CreateClub";
 import BookClubDetails from "./components/BookClubDetails";
+import UserProfilePage from "./pages/UserProfilePage";
+import AllUserListPage from "./pages/AllUserListPage";
+import MyFollowingsPage from "./pages/MyFollowings";
+import MyFollowersPage from "./pages/MyFollowersPage";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
@@ -58,6 +62,10 @@ const App = () => {
           <Route path="/bookclubs" element={<BookClubList />} />
           <Route path="/bookclubs/:id" element={<BookClubDetails />} />
           <Route path="/createclub" element={<CreateClub />} />
+          <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/allusers" element={<AllUserListPage />} />
+          <Route path="/myfollowings" element={<MyFollowingsPage />} />
+          <Route path="/myfollowers" element={<MyFollowersPage />} />
         </Routes>
       </div>
     </Router>
