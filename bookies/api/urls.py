@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, BookClubView, JoinBookClubView, LeaveBookClubView, BookClubPostView, ClubTagView, PostTagView
+from .views import BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, BookClubView, JoinBookClubView, LeaveBookClubView, BookClubPostView, ClubTagView, PostTagView, AddLikeToPost, AddReplyToPost
 
 router = DefaultRouter()
 
@@ -24,6 +24,9 @@ urlpatterns = [
     path('bookclubs/leave/<int:club_id>/', LeaveBookClubView.as_view(), name='leave_book_club'),  
     path('bookclubs/<int:club_id>/posts/', BookClubPostView.as_view(), name='bookclub-posts'),
     path('bookclubs/<int:club_id>/posts/<int:post_id>/', BookClubPostView.as_view(), name='bookclub-post-detail'),
+    path('bookclubs/<int:club_id>/posts/<int:post_id>/likes/', AddLikeToPost.as_view(), name='add_like_to_post'),
+    path('bookclubs/<int:club_id>/posts/<int:post_id>/replies/', AddReplyToPost.as_view(), name='add_reply_to_post'),
+    path('bookclubs/<int:club_id>/posts/<int:post_id>/replies/<int:reply_id>/', AddReplyToPost.as_view(), name='manage_reply_to_post'),
     path('clubtags/', ClubTagView.as_view(), name='clubtags-list-create'),
     path('clubtags/<int:pk>/', ClubTagView.as_view(), name='clubtag-detail-update-delete'),
     path('posttags/', PostTagView.as_view(), name='posttags-list-create'),

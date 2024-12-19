@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 
 # Third-party imports
 from rest_framework.views import APIView
@@ -19,8 +20,8 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag
-from .serializers import ReviewSerializer, UserSerializer ,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer, BookClubSerializer, BookClubPostSerializer, ClubTagSerializer, PostTagSerializer
+from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, PostReply
+from .serializers import ReviewSerializer, UserSerializer ,ReviewReplySerializer,ReviewLikeSerializer,ReviewDisLikeSerializer, BookClubSerializer, BookClubPostSerializer, ClubTagSerializer, PostTagSerializer, PostReplySerializer
 
 from django.contrib.auth import authenticate
 
@@ -649,3 +650,166 @@ class BookClubPostView(APIView):
             return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except BookClubPost.DoesNotExist:
             return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class AddLikeToPost(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, club_id, post_id):
+        """Add a like to the post in a specific club"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        user = request.user
+        if user not in post.likes.all():
+            post.likes.add(user)
+            return Response({"message": "Liked!"})
+        return Response({"message": "Already liked!"})
+
+    def delete(self, request, club_id, post_id):
+        """Remove the like from the post in a specific club"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        user = request.user
+        if user in post.likes.all():
+            post.likes.remove(user)
+            return Response({"message": "Like removed!"})
+        return Response({"message": "You haven't liked this post!"}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, club_id, post_id):
+        """Get the list of users who liked the post in a specific club"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        likes = post.likes.all()
+        like_users = [user.username for user in likes]
+        return Response({"liked_by": like_users})
+
+
+
+class AddReplyToPost(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, club_id, post_id):
+        """Add a reply to a post in a specific club"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        # Get the reply content from the request
+        reply_content = request.data.get('content')
+        if not reply_content:
+            return Response({"message": "Reply content is required!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        
+        # Create the reply
+        reply = PostReply.objects.create(post=post, author=user, content=reply_content)
+        
+        return Response({"message": "Reply added!"}, status=status.HTTP_201_CREATED)
+
+    def get(self, request, club_id, post_id, reply_id=None):
+        """Get all replies for a post or a specific reply"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        if reply_id:
+            # Get a specific reply
+            reply = get_object_or_404(PostReply, id=reply_id, post=post)
+            serializer = PostReplySerializer(reply)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # Get all replies for the post
+            replies = PostReply.objects.filter(post=post)
+            serializer = PostReplySerializer(replies, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, club_id, post_id, reply_id):
+        """Update an existing reply"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        # Ensure the reply exists
+        reply = get_object_or_404(PostReply, id=reply_id, post=post)
+
+        # Ensure the user is the author of the reply or an admin
+        if request.user != reply.author and not request.user.is_staff:
+            return Response({"message": "You can only edit your own replies."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Get the new content
+        new_content = request.data.get('content')
+        if not new_content:
+            return Response({"message": "Content is required for update!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the reply
+        reply.content = new_content
+        reply.save()
+
+        return Response({"message": "Reply updated!"}, status=status.HTTP_200_OK)
+
+    def delete(self, request, club_id, post_id, reply_id):
+        """Delete a reply"""
+        # Ensure the club exists
+        club = get_object_or_404(BookClub, id=club_id)
+        
+        # Ensure the post belongs to the specified club
+        post = get_object_or_404(BookClubPost, id=post_id, club=club)
+        
+        # Ensure the reply exists
+        reply = get_object_or_404(PostReply, id=reply_id, post=post)
+
+        # Ensure the user is the author of the reply or an admin
+        if request.user != reply.author and not request.user.is_staff:
+            return Response({"message": "You can only delete your own replies."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Delete the reply
+        reply.delete()
+        return Response({"message": "Reply deleted!"}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+class BookClubPostDetail(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, post_id):
+        """Get details of a single post"""
+        post = get_object_or_404(BookClubPost, id=post_id)
+        serializer = BookClubPostSerializer(post)
+        return Response(serializer.data)
+
+    def put(self, request, post_id):
+        """Update an existing post"""
+        post = get_object_or_404(BookClubPost, id=post_id, author=request.user)
+        new_content = request.data.get('content')
+        if not new_content:
+            return Response({"message": "Content is required for update!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        post.content = new_content
+        post.save()
+        return Response({"message": "Post updated!"})
+
+    def delete(self, request, post_id):
+        """Delete an existing post"""
+        post = get_object_or_404(BookClubPost, id=post_id, author=request.user)
+        post.delete()
+        return Response({"message": "Post deleted!"})
+

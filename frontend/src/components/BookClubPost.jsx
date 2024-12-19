@@ -6,6 +6,10 @@ const BookClubPost = ({ post, clubId }) => {
   const [updatedContent, setUpdatedContent] = useState(post.content);
   const [error, setError] = useState(null);
   const [userIsOwner, setUserIsOwner] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count || 0); // To track likes
+  const [userLiked, setUserLiked] = useState(post.user_liked || false); // To track if the user has liked the post
+  const [replies, setReplies] = useState(post.replies || []); // To track replies
+  const [newReply, setNewReply] = useState(""); // To manage new reply content
 
   const token = localStorage.getItem("access");
 
@@ -21,7 +25,7 @@ const BookClubPost = ({ post, clubId }) => {
         }
       );
       const currentUserData = await currentUserResponse.json();
-      // Check if the current user's username matches the post's author (you can adjust this logic as needed)
+      // Check if the current user's username matches the post's author
       setUserIsOwner(currentUserData.username === post.author);
     } catch (error) {
       setError("Failed to fetch current user.");
@@ -63,6 +67,43 @@ const BookClubPost = ({ post, clubId }) => {
       })
       .catch((err) => {
         setError("Failed to update post");
+      });
+  };
+
+  // Handle liking the post
+  const handleLike = () => {
+    const action = userLiked ? "unlike" : "like"; // Toggle like/unlike
+    axios
+      .post(
+        `http://127.0.0.1:8000/api/bookclubs/${clubId}/posts/${post.id}/likes/`,
+        { action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setLikesCount(response.data.likes_count);
+        setUserLiked(!userLiked); // Toggle user liked state
+      })
+      .catch((err) => {
+        setError("Failed to like post");
+      });
+  };
+
+  // Handle adding a reply
+  const handleAddReply = () => {
+    if (!newReply) return;
+
+    axios
+      .post(
+        `http://127.0.0.1:8000/api/bookclubs/${clubId}/posts/${post.id}/replies/`,
+        { content: newReply },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then((response) => {
+        setReplies([...replies, response.data.reply]); // Add new reply to the list
+        setNewReply(""); // Clear the input
+      })
+      .catch((err) => {
+        setError("Failed to add reply");
       });
   };
 
@@ -118,6 +159,18 @@ const BookClubPost = ({ post, clubId }) => {
         <p className="text-lg">{post.content}</p>
       )}
 
+      {/* Likes */}
+      <div className="mt-4">
+        <button
+          onClick={handleLike}
+          className={`bg-${
+            userLiked ? "red" : "blue"
+          }-500 text-white px-4 py-2 rounded`}
+        >
+          {userLiked ? "Unlike" : "Like"} ({likesCount})
+        </button>
+      </div>
+
       {/* Error handling */}
       {error && (
         <div className="bg-red-100 text-red-600 p-4 rounded mb-4">{error}</div>
@@ -140,6 +193,38 @@ const BookClubPost = ({ post, clubId }) => {
           </button>
         </div>
       )}
+
+      {/* Replies Section */}
+      <div className="mt-4">
+        <h3 className="text-lg font-bold">Replies</h3>
+        <div className="mt-2">
+          {replies.length === 0 ? (
+            <p>No replies yet</p>
+          ) : (
+            replies.map((reply) => (
+              <div key={reply.id} className="mb-2">
+                <p className="text-sm">
+                  {reply.author}: {reply.content}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Reply Input */}
+        <textarea
+          value={newReply}
+          onChange={(e) => setNewReply(e.target.value)}
+          placeholder="Write a reply..."
+          className="border p-2 mt-2 w-full"
+        />
+        <button
+          onClick={handleAddReply}
+          className="mt-2 bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Reply
+        </button>
+      </div>
     </div>
   );
 };
