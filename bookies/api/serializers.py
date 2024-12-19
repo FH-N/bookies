@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Review , User, BookClub, BookClubMembership, BookClubDiscussion , ReviewReply, ReviewLike, ReviewDisLike
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag
 
 
-
+#User serializers
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(write_only=True)  # Add `role` as a writable field
+    role = serializers.CharField(write_only=True) 
 
     class Meta:
         model = User
@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.profile.save()
 
         return user
-
+    
     def update(self, instance, validated_data):
         """
         Update the user fields: username, email, password, and profile fields like role and bio.
@@ -85,28 +85,55 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
 
-class BookClubMembershipSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    role = serializers.ChoiceField(choices=BookClubMembership.ROLE_CHOICES)
 
+class ClubTagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BookClubMembership
-        fields = ['user', 'role', 'joined_at']
+        model = ClubTag
+        fields = ['id', 'name']
+
 
 class BookClubSerializer(serializers.ModelSerializer):
-    owner = UserSerializer()
-    members = BookClubMembershipSerializer(many=True, read_only=True)
-    is_private = serializers.BooleanField()
+    members = serializers.StringRelatedField(many=True)
+    club_tags = ClubTagSerializer(many=True, read_only=True)  # Nested serializer for tags
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=ClubTag.objects.all(), write_only=True, source='club_tags'
+    )  
+    is_member = serializers.SerializerMethodField()
+    owner = serializers.StringRelatedField()  # Display owner's username
 
     class Meta:
         model = BookClub
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at', 'slug', 'owner', 'members', 'is_private']
+        fields = [
+            'id', 
+            'name', 
+            'description', 
+            'members', 
+            'club_tags', 
+            'tag_ids', 
+            'created_at', 
+            'is_member', 
+            'owner'  
+        ]
 
-class BookClubDiscussionSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer()
-    book_club = BookClubSerializer()
+    def get_is_member(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.members.filter(id=request.user.id).exists()
+        return False
+
+
+class PostTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostTag
+        fields = ['id', 'name']  # Serialize the PostTag model with 'id' and 'name'
+
+
+class BookClubPostSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    created_at = serializers.ReadOnlyField()
+    post_tags = PostTagSerializer(many=True, read_only=True)  # Add PostTagSerializer to include post tags
 
     class Meta:
-        model = BookClubDiscussion
-        fields = ['id', 'book_club', 'title', 'content', 'created_by', 'created_at', 'updated_at']
+        model = BookClubPost
+        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags']  # Add post_tags to the list of fields
 
