@@ -90,17 +90,36 @@ class BookClubPost(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='club_posts')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    post_tags = models.ManyToManyField(PostTag, related_name='bookclub_posts', blank=True)  # Separate post tags
+    post_tags = models.ManyToManyField(PostTag, related_name='bookclub_posts', blank=True) 
+    likes = models.ManyToManyField(User, related_name='liked_bookclub_posts', blank=True) 
 
     def __str__(self):
         return f"Post by {self.author.username} in {self.club.name}"
+    
+    @property
+    def total_likes(self):
+        return self.likes.count()
 
 
 class ClubPost(models.Model): 
     club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='clubpost_posts')
     content = models.TextField()
+    likes = models.ManyToManyField(User, related_name='liked_club_posts', blank=True)
 
     def __str__(self):
         return f"Post in {self.club.name}"
+    
+    @property
+    def total_likes(self):
+        return self.likes.count()
+    
 
+class PostReply(models.Model):
+    post = models.ForeignKey(BookClubPost, on_delete=models.CASCADE, related_name='replies', blank=True, null=True)
+    club_post = models.ForeignKey(ClubPost, on_delete=models.CASCADE, related_name='replies', blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='replies')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Reply by {self.author.username} on post {self.post if self.post else self.club_post}"
