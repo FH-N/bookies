@@ -3,7 +3,7 @@ name: Django Backend Tests
 on:
   pull_request:
     branches:
-      - main  # Adjust this to your main branch name
+      - main  
 
 jobs:
   test:
@@ -36,12 +36,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
+          pip install -r bookies/requirements.txt  
       - name: Run tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
         run: |
+          cd bookies  # Navigate to the 'bookies' folder where your Django app is
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov
+          pytest --cov=bookies  # Adjust the coverage target if necessary
