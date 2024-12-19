@@ -15,6 +15,12 @@ const AuthForm = ({ route, method }) => {
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
 
+  function decodeToken(token) {
+    const payloadBase64 = token.split('.')[1]; // Extract the payload part
+    const decodedPayload = atob(payloadBase64); // Decode Base64 string
+    return JSON.parse(decodedPayload); // Parse JSON payload
+}
+
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => navigate("/login"), 2000);
@@ -35,7 +41,17 @@ const AuthForm = ({ route, method }) => {
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-      
+
+        const accessToken = res.data.access;
+        if (accessToken) {
+            const decodedToken = decodeToken(accessToken);
+            if (decodedToken) {
+              localStorage.setItem("user_id", decodedToken.user_id); // Adjust to match token payload
+            }
+        } else {
+            setError("No access token found.");
+        }
+        
         navigate("/");
         window.location.reload();
       } else {

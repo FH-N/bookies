@@ -13,6 +13,9 @@ import ReviewForm from "./components/CreateReview";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
 import UserProfilePage from "./pages/UserProfilePage";
+import AllUserListPage from "./pages/AllUserListPage";
+import MyFollowingsPage from "./pages/MyFollowings";
+import MyFollowersPage from "./pages/MyFollowersPage";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
@@ -55,6 +58,9 @@ const App = () => {
           <Route path="/" element={<ConditionalHome />} />
           <Route path="/recommendation" element={<RecommendationPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/allusers" element={<AllUserListPage />} />
+          <Route path="/myfollowings" element={<MyFollowingsPage />} />
+          <Route path="/myfollowers" element={<MyFollowersPage />} />
         </Routes>
       </div>
     </Router>
