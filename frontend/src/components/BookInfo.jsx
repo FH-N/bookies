@@ -13,11 +13,9 @@ const BookInfo = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null); // For editing reviews
+  const [selectedReply, setSelectedReply] = useState(null); // For editing replies
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
-
-
-
-
+  const [isReplyModalOpen, setIsReplyModalOpen] = useState(false); // Reply modal state
 
   const fetchBookDetails = async () => {
     try {
@@ -62,15 +60,13 @@ const BookInfo = () => {
       )
     );
   };
-  
+
   const handleDeleteReview = async (reviewId) => {
     try {
       setLoading(true);
-      console.log("in here1"); // Check if the token is valid
       await axios.delete(`http://127.0.0.1:8000/api/reviews/${reviewId}/delete/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
       });
-      console.log("in here2");
       setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewId));
       setMessage("Review deleted successfully!");
     } catch (error) {
@@ -103,14 +99,71 @@ const BookInfo = () => {
     }
   };
 
+  const handleDeleteReply = async (reviewId, replyId) => {
+    try {
+      setLoading(true);
+      await axios.delete(`http://127.0.0.1:8000/api/reviews/reply/${replyId}/delete/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+      });
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review.id === reviewId
+            ? {
+                ...review,
+                replies: review.replies.filter((reply) => reply.id !== replyId),
+              }
+            : review
+        )
+      );
+      setMessage("Reply deleted successfully!");
+    } catch (error) {
+      alert("Failed to delete reply.", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateReply = async (reviewId, updatedContent) => {
+    if (!selectedReply) return;
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        `http://127.0.0.1:8000/api/reviews/reply/${selectedReply.id}/update/`,
+        { content: updatedContent },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      );
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review.id === reviewId
+            ? {
+                ...review,
+                replies: review.replies.map((reply) =>
+                  reply.id === selectedReply.id ? { ...reply, ...response.data } : reply
+                ),
+              }
+            : review
+        )
+      );
+      setMessage("Reply updated successfully!");
+      setIsReplyModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      setMessage("Failed to update reply.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openEditModal = (review) => {
     setSelectedReview(review);
     setIsModalOpen(true);
   };
-  
 
-
-
+  const openEditReplyModal = (review, reply) => {
+    setSelectedReview(review);
+    setSelectedReply(reply);
+    setIsReplyModalOpen(true);
+  };
 
   if (error) return <p className="text-red-500">{error}</p>;
   if (!book) return <p className="text-gray-600">Loading...</p>;
@@ -165,13 +218,13 @@ const BookInfo = () => {
                 {new Date(review.created_at).toLocaleString()}
               </p>
               <div className="flex items-center gap-4 mt-2">
-              <button
+                <button
                   onClick={() => openEditModal(review)}
                   className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
                 >
                   ✏️ Edit
                 </button>
-              <button
+                <button
                   onClick={() => handleDeleteReview(review.id)}
                   className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
                 >
@@ -190,6 +243,20 @@ const BookInfo = () => {
                       <p className="text-sm text-gray-500">
                         {new Date(reply.created_at).toLocaleString()}
                       </p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <button
+                          onClick={() => openEditReplyModal(review, reply)}
+                          className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReply(review.id, reply.id)}
+                          className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -213,6 +280,8 @@ const BookInfo = () => {
         <h3 className="text-lg font-semibold mb-4">Add a Review</h3>
         <ReviewForm googleBooksId={id} onReviewAdded={handleReviewAdded} />
       </div>
+
+      {/* Modal for Editing Review */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
@@ -221,7 +290,9 @@ const BookInfo = () => {
               defaultValue={selectedReview.content}
               rows="4"
               className="w-full border p-2 rounded"
-              onChange={(e) => setSelectedReview({ ...selectedReview, content: e.target.value })}
+              onChange={(e) =>
+                setSelectedReview({ ...selectedReview, content: e.target.value })
+              }
             />
             <div className="flex items-center justify-end gap-4 mt-4">
               <button
@@ -232,6 +303,37 @@ const BookInfo = () => {
               </button>
               <button
                 onClick={() => handleUpdateReview(selectedReview.content)}
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Editing Reply */}
+      {isReplyModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Reply</h3>
+            <textarea
+              defaultValue={selectedReply.content}
+              rows="4"
+              className="w-full border p-2 rounded"
+              onChange={(e) =>
+                setSelectedReply({ ...selectedReply, content: e.target.value })
+              }
+            />
+            <div className="flex items-center justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsReplyModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUpdateReply(selectedReply.review, selectedReply.content)}
                 className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
               >
                 Save
