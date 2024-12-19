@@ -10,7 +10,7 @@ const BookInfo = () => {
   const [book, setBook] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState("");  // For showing success or error message
+ 
 
   const fetchBookDetails = async () => {
     try {
@@ -56,117 +56,7 @@ const BookInfo = () => {
     );
   };
 
-  const handleLike = async (reviewId) => {
-    try {
-      const url = `http://127.0.0.1:8000/api/reviews/${reviewId}/like/`;
-      const response = await axios({
-        url,
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      });
 
-      setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review.id === reviewId
-            ? {
-                ...review,
-                likes_count: response.data.likes , // Increment like count by 1
-                dislikes_count: review.dislikes_count > 0 ? review.dislikes_count - 1 : 0, // Decrement dislike if it was present
-              }
-            : review
-        )
-      );
-      setMessage("Review liked successfully!");
-    } catch (error) {
-      setMessage(`Failed to like review: ${error.message}`);
-    }
-  };
-
-
-
-  const handleDisLike = async (reviewId) => {
-    try {
-      const url = `http://127.0.0.1:8000/api/reviews/${reviewId}/dislike/`;
-      const response = await axios({
-        url,
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      });
-
-      setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review.id === reviewId
-            ? {
-                ...review,
-                dislikes_count: response.data.dislikes, // Increment dislike count by 1
-                likes_count: review.likes_count > 0 ? review.likes_count - 1 : 0, // Decrement like if it was present
-              }
-            : review
-        )
-      );
-      setMessage("Review disliked successfully!");
-    } catch (error) {
-      setMessage(`Failed to dislike review: ${error.message}`);
-    }
-  };
-
-  const handleRemoveLike = async (reviewId) => {
-    try {
-      const url = `http://127.0.0.1:8000/api/reviews/${reviewId}/like/delete`;
-      const response = await axios({
-        url,
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      });
-
-      setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review.id === reviewId
-            ? {
-                ...review,
-                likes_count: review.likes_count > 0 ? review.likes_count - 1 : 0, // Decrement like count by 1
-              }
-            : review
-        )
-      );
-      setMessage("like removed successfully!");
-    } catch (error) {
-      setMessage(`Failed to remove like: ${error.message}`);
-    }
-  };
-
-  const handleRemoveDislike = async (reviewId) => {
-    try {
-      const url = `http://127.0.0.1:8000/api/reviews/${reviewId}/dislike/delete`;
-      const response = await axios({
-        url,
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      });
-
-      setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review.id === reviewId
-            ? {
-                ...review,
-                dislikes_count: review.dislikes_count > 0 ? review.dislikes_count - 1 : 0, // Decrement dislike count by 1
-              }
-            : review
-        )
-      );
-      setMessage("Dislike removed successfully!");
-    } catch (error) {
-      setMessage(`Failed to remove dislike: ${error.message}`);
-    }
-  };
-
-  const isLiked = (review) => {
-    return review.likes_count > 0;
-  };
-
-  const isDisliked = (review) => {
-    return review.dislikes_count > 0;
-  };
 
   if (error) return <p className="text-red-500">{error}</p>;
   if (!book) return <p className="text-gray-600">Loading...</p>;
@@ -207,9 +97,6 @@ const BookInfo = () => {
         </div>
       </div>
 
-      {/* Success/Error Message */}
-      {message && <p className="mt-4 text-green-500">{message}</p>}
-
       {/* Reviews Section */}
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-4">Reviews:</h3>
@@ -223,33 +110,6 @@ const BookInfo = () => {
               <p className="text-sm text-gray-500">
                 {new Date(review.created_at).toLocaleString()}
               </p>
-              <div className="flex items-center gap-4 mt-2">
-                <button
-                  onClick={() =>
-                    isLiked(review) ? handleRemoveLike(review.id) : handleLike(review.id)
-                  }
-                  className={`${
-                    isLiked(review) ? "bg-blue-700" : "bg-blue-500"
-                  } hover:bg-blue-700 text-white px-2 py-1 rounded`}
-                >
-                  {isLiked(review) ? `👍 Like (${review.likes_count })` : `👍 Like (${review.likes_count || 0})`}
-                </button>
-
-                <button
-                  onClick={() =>
-                    isDisliked(review)
-                      ? handleRemoveDislike(review.id)
-                      : handleDisLike(review.id)
-                  }
-                  className={`${
-                    isDisliked(review) ? "bg-red-700" : "bg-red-500"
-                  } hover:bg-red-700 text-white px-2 py-1 rounded`}
-                >
-                  {isDisliked(review)
-                    ? `👎 Dislike (${review.dislikes_count })`
-                    : `👎 Dislike (${review.dislikes_count || 0})`}
-                </button>
-              </div>
               {/* Replies */}
               <div className="ml-4 pl-4 border-l mt-4">
                 <h4 className="text-md font-semibold">Replies:</h4>
@@ -265,22 +125,26 @@ const BookInfo = () => {
                     </div>
                   ))
                 ) : (
-                  <p>No replies yet.</p>
+                  <p className="text-gray-600">No replies yet.</p>
                 )}
+                {/* Add Reply */}
                 <ReplyComponent
                   reviewId={review.id}
-                  onReplyAdded={handleReplyAdded}
+                  onReplyAdded={(newReply) => handleReplyAdded(review.id, newReply)}
                 />
               </div>
             </div>
           ))
         ) : (
-          <p>No reviews yet.</p>
+          <p>No reviews yet. Be the first to review!</p>
         )}
       </div>
 
-      {/* Add a Review */}
-      <ReviewForm bookId={id} onReviewAdded={handleReviewAdded} />
+      {/* Add Review Section */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-4">Add a Review</h3>
+        <ReviewForm googleBooksId={id} onReviewAdded={handleReviewAdded} />
+      </div>
     </div>
   );
 };
