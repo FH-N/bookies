@@ -88,7 +88,9 @@ const BookClubList = () => {
   };
 
   // Handle joining a book club
-  const handleJoinBookClub = (clubId) => {
+  const handleJoinBookClub = (clubId, e) => {
+    e.stopPropagation(); // Prevent the event from bubbling to the parent div
+
     const token = localStorage.getItem("access");
 
     axios
@@ -103,11 +105,25 @@ const BookClubList = () => {
       )
       .then((response) => {
         alert(response.data.message);
-        setBookClubs((prevClubs) =>
-          prevClubs.map((club) =>
+
+        // Update the is_member state for the club in the bookClubs state
+        setBookClubs((prevClubs) => {
+          const updatedClubs = prevClubs.map((club) =>
             club.id === clubId ? { ...club, is_member: true } : club
-          )
-        );
+          );
+          return updatedClubs;
+        });
+
+        // Also update the filtered list to make sure the UI reflects the change
+        setFilteredBookClubs((prevFilteredClubs) => {
+          const updatedFiltered = { ...prevFilteredClubs };
+          for (const tagName in updatedFiltered) {
+            updatedFiltered[tagName] = updatedFiltered[tagName].map((club) =>
+              club.id === clubId ? { ...club, is_member: true } : club
+            );
+          }
+          return updatedFiltered;
+        });
       })
       .catch((err) => {
         // Handle error gracefully
@@ -223,7 +239,7 @@ const BookClubList = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!club.is_member) {
-                        handleJoinBookClub(club.id);
+                        handleJoinBookClub(club.id, e);
                       }
                     }}
                     className={`${
