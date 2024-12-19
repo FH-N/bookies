@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const FollowingStats = () => {
@@ -33,16 +34,38 @@ const FollowingStats = () => {
         return <div>Loading...</div>;
     }
 
+
     return (
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <h2>Following Stats</h2>
-            <p>
-                <strong>Following:</strong> {stats.following_count}
-            </p>
-            <p>
-                <strong>Followers:</strong> {stats.followers_count}
-            </p>
-        </div>
+        <h2>Following Stats</h2>
+        <p>
+          
+          <Link
+            to="/allusers"
+            style={{ color: 'blue', textDecoration: 'underline' }}
+          >
+            <strong>All Users</strong>
+          </Link>
+        </p>
+        <p>
+          <strong>Following:</strong>{' '}
+          <Link
+            to="/myfollowings"
+            style={{ color: 'blue', textDecoration: 'underline' }}
+          >
+            {stats.following_count}
+          </Link>
+        </p>
+        <p>
+          <strong>Followers:</strong>{' '}
+          <Link
+            to="/myfollowers"
+            style={{ color: 'blue', textDecoration: 'underline' }}
+          >
+            {stats.followers_count}
+          </Link>
+        </p>
+      </div>
     );
 };
 
