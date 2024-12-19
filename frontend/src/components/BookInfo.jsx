@@ -10,7 +10,14 @@ const BookInfo = () => {
   const [book, setBook] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [error, setError] = useState(null);
- 
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [selectedReview, setSelectedReview] = useState(null); // For editing reviews
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+
+
+
+
 
   const fetchBookDetails = async () => {
     try {
@@ -55,6 +62,53 @@ const BookInfo = () => {
       )
     );
   };
+  
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      setLoading(true);
+      console.log("in here1"); // Check if the token is valid
+      await axios.delete(`http://127.0.0.1:8000/api/reviews/${reviewId}/delete/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+      });
+      console.log("in here2");
+      setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewId));
+      setMessage("Review deleted successfully!");
+    } catch (error) {
+      alert("Failed to delete review.", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateReview = async (updatedContent) => {
+    if (!selectedReview) return;
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        `http://127.0.0.1:8000/api/reviews/${selectedReview.id}/update`,
+        { content: updatedContent },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      );
+      setReviews((prevReviews) =>
+        prevReviews.map((review) =>
+          review.id === selectedReview.id ? { ...review, ...response.data } : review
+        )
+      );
+      setMessage("Review updated successfully!");
+      setIsModalOpen(false);
+    } catch (error) {
+      setMessage("Failed to update review.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditModal = (review) => {
+    setSelectedReview(review);
+    setIsModalOpen(true);
+  };
+  
+
 
 
 
@@ -110,6 +164,20 @@ const BookInfo = () => {
               <p className="text-sm text-gray-500">
                 {new Date(review.created_at).toLocaleString()}
               </p>
+              <div className="flex items-center gap-4 mt-2">
+              <button
+                  onClick={() => openEditModal(review)}
+                  className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+                >
+                  ✏️ Edit
+                </button>
+              <button
+                  onClick={() => handleDeleteReview(review.id)}
+                  className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
               {/* Replies */}
               <div className="ml-4 pl-4 border-l mt-4">
                 <h4 className="text-md font-semibold">Replies:</h4>
@@ -145,6 +213,33 @@ const BookInfo = () => {
         <h3 className="text-lg font-semibold mb-4">Add a Review</h3>
         <ReviewForm googleBooksId={id} onReviewAdded={handleReviewAdded} />
       </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Review</h3>
+            <textarea
+              defaultValue={selectedReview.content}
+              rows="4"
+              className="w-full border p-2 rounded"
+              onChange={(e) => setSelectedReview({ ...selectedReview, content: e.target.value })}
+            />
+            <div className="flex items-center justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUpdateReview(selectedReview.content)}
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
