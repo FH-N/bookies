@@ -52,10 +52,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ReviewReplySerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = ReviewReply
-        fields = ['id', 'user', 'content', 'created_at']
+        fields = ['id', 'user','user_id', 'content', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
 
 
@@ -77,12 +78,13 @@ class ReviewDisLikeSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     replies = ReviewReplySerializer(many=True, read_only=True)
     likes = ReviewLikeSerializer(many=True, read_only=True)
     dislikes = ReviewDisLikeSerializer(many=True, read_only=True)
     class Meta:
         model = Review
-        fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
+        fields = ['id', 'user','user_id', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
         extra_kwargs = {
             'content': {'required': False, 'allow_blank': True},  # Mark content as optional

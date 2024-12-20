@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import ReviewForm from "./CreateReview";
-import ReplyComponent from "./ReplyComponent";
 import { IconStarFilled } from "@tabler/icons-react";
 import Button from "./ui/Button";
 

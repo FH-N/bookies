@@ -112,24 +112,13 @@ const ReviewList = ({ id }) => {
     if (!selectedReply) return;
     try {
       setLoading(true);
-      const response = await axios.put(
+      await axios.put(
         `http://127.0.0.1:8000/api/reviews/reply/${selectedReply.id}/update/`,
         { content: updatedContent },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
-      setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review.id === reviewId
-            ? {
-                ...review,
-                replies: review.replies.map((reply) =>
-                  reply.id === selectedReply.id ? { ...reply, ...response.data } : reply
-                ),
-              }
-            : review
-        )
-      );
       setMessage("Reply updated successfully!");
+      fetchReviews(); // Refetch reviews to get the updated replies
       setIsReplyModalOpen(false);
     } catch (error) {
       setMessage("Failed to update reply.");
@@ -138,12 +127,23 @@ const ReviewList = ({ id }) => {
     }
   };
   
+
+  const currentUserId = localStorage.getItem("user_id");
+
   const openEditModal = (review) => {
+    if (review.user_id !== parseInt(currentUserId)) { // Compare with the user_id from the API
+      alert("You cannot edit this review because you are not the author.");
+      return;
+    }
     setSelectedReview(review);
     setIsModalOpen(true);
   };
 
   const openEditReplyModal = (review, reply) => {
+    if (reply.user_id !== parseInt(currentUserId)) { // Compare with the user_id from the API
+      alert("You cannot edit this reply because you are not the author.");
+      return;
+    }
     setSelectedReview(review);
     setSelectedReply(reply);
     setIsReplyModalOpen(true);
