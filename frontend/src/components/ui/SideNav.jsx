@@ -36,7 +36,7 @@ const SideNav = () => {
       </div>
       <div
         className="flex flex-row p-1 cursor-pointer"
-        onClick={() => navigate("/following")}
+        onClick={() => navigate("/myfollowings")}
       >
         <IconUsers stroke={2} size={32} />
         <h1 className="p-1">Following</h1>

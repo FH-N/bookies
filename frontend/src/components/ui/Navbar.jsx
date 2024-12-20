@@ -50,10 +50,13 @@ function Navbar() {
           {/* Only visible when logged in */}
           {isAuthorized && (
             <>
-              <IconUserCircle
-                stroke={2}
-                className="text-white cursor-pointer"
-              />
+              <div
+                onClick={() => navigate("/profile")}
+                className="cursor-pointer"
+              >
+                <IconUserCircle stroke={2} className="text-white" />
+              </div>
+
               <IconBell stroke={2} className="text-white cursor-pointer" />
             </>
           )}

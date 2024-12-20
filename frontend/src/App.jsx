@@ -14,6 +14,10 @@ import HomePage from "./pages/HomePage";
 import BookClubList from "./pages/ClubsPage";
 import CreateClub from "./components/CreateClub";
 import BookClubDetails from "./components/BookClubDetails";
+import UserProfilePage from "./pages/UserProfilePage";
+import AllUserListPage from "./pages/AllUserListPage";
+import MyFollowingsPage from "./pages/MyFollowings";
+import MyFollowersPage from "./pages/MyFollowersPage";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
@@ -44,7 +48,7 @@ const App = () => {
   return (
     <Router>
       <NavBar />
-      <div className="w-full min-h-[calc(100vh-4rem)] bg-gradient-to-b from-light-purple via-light-purple-pink-flower to-pink-flower from-45%  dark:from-deep-purple dark:via-deep-purple-light-purple dark:to-light-purple pt-16">
+      <div className="w-full min-h-[calc(100vh-4rem)] bg-gradient-to-b from-light-purple via-light-purple-pink-flower to-pink-flower from-40%  dark:from-deep-purple dark:via-deep-purple-light-purple dark:to-light-purple pt-16">
         <Routes>
           <Route path="/login/callback" element={<RedirectGoogleAuth />} />
           <Route path="/login" element={<ProtectedLogin />} />
@@ -58,6 +62,10 @@ const App = () => {
           <Route path="/bookclubs" element={<BookClubList />} />
           <Route path="/bookclubs/:id" element={<BookClubDetails />} />
           <Route path="/createclub" element={<CreateClub />} />
+          <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/allusers" element={<AllUserListPage />} />
+          <Route path="/myfollowings" element={<MyFollowingsPage />} />
+          <Route path="/myfollowers" element={<MyFollowersPage />} />
         </Routes>
       </div>
     </Router>

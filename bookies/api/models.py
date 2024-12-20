@@ -49,12 +49,12 @@ class UserProfile(models.Model):
         ('Author', 'Author'),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User')  
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='User') 
+    bio = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
-
-
+    
 class ClubTag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
@@ -112,7 +112,20 @@ class ClubPost(models.Model):
     @property
     def total_likes(self):
         return self.likes.count()
-    
+
+
+class Followings(models.Model):
+    id = models.AutoField(primary_key=True)  # Auto-incrementing ID
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")  # The user who is following
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")  # The user being followed
+
+    created_at = models.DateTimeField(auto_now_add=True)  # Optional: Timestamp for when the follow was created
+
+    class Meta:
+        unique_together = ('user', 'followed_user')  # Ensure a user cannot follow the same user multiple times
+
+    def __str__(self):
+        return f"{self.user.username} follows {self.followed_user.username}"
 
 class PostReply(models.Model):
     post = models.ForeignKey(BookClubPost, on_delete=models.CASCADE, related_name='replies', blank=True, null=True)

@@ -3,7 +3,7 @@ import RecommendedCategory from "../components/RecommendedCategory";
 
 const RecommendationPage = () => {
   return (
-    <div className="container w-full min-h-[calc(100vh-4rem)] ">
+    <div className="container flex flex-col w-full min-h-screen">
       <h1 className="text-4xl text-white font-poppins font-extrabold py-8">
         {" "}
         Discover your next read!
