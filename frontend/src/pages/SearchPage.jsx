@@ -1,21 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, Link } from "react-router-dom";
 import SearchResultList from "../components/SearchResultList";
-import { Link } from "react-router-dom";
 
 const SearchPage = () => {
-  const [search, setSearch] = useState("");
-  const [author, setAuthor] = useState("");
   const [books, setBooks] = useState([]);
   const [error, setError] = useState("");
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const searchTerm = queryParams.get("query") || "";
+
+  useEffect(() => {
+    if (searchTerm) {
+      fetchBooks(searchTerm);
+    }
+  }, [searchTerm]);
+
+  const fetchBooks = async (search) => {
     setError("");
     try {
       const response = await fetch(
         `http://localhost:8000/books/search/?search=${encodeURIComponent(
           search
-        )}&author=${encodeURIComponent(author)}`
+        )}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch books.");
@@ -28,27 +35,19 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center">
-      <form onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search by title"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="m-2 px-4"
-        />
-        <button
-          type="submit"
-          className="text-sm bold bg-slate-500 py-2 px-3 rounded-xl text-white"
-        >
-          Search
-        </button>
-        <Link to={`/`}>Back</Link>
-      </form>
-
+    <div className="flex flex-col container px-48 text-white font-poppins">
+      <h2 className="text-4xl font-bold text-left mt-4">
+        Showing results for:{" "}
+        <span className="text-lemon-lime font-medium">{searchTerm}</span>
+      </h2>
+      <h3 className="text-2xl py-3 font-roboto-serif">
+        {books.length} {books.length === 1 ? "result" : "results"}
+      </h3>
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <SearchResultList books={books} />
+      <Link to={`/`} className="mt-4 text-blue-500">
+        Back
+      </Link>
     </div>
   );
 };

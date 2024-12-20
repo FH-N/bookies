@@ -3,12 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ReviewForm from "./CreateReview";
 import ReplyComponent from "./ReplyComponent";
+import { IconStarFilled } from "@tabler/icons-react";
+import Button from "./ui/Button";
 
 const BookInfo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [error, setError] = useState(null);
+  const [rating, setRating] = useState(0); // State for the rating
 
 
   const fetchBookDetails = async () => {
@@ -38,35 +41,102 @@ const BookInfo = () => {
   const { title, authors, description, pageCount, publishedDate, imageLinks } =
     volumeInfo;
 
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const emptyStars = 5 - fullStars;
+
+    return (
+      <div className="flex items-center space-x-1">
+        {Array.from({ length: fullStars }).map((_, index) => (
+          <IconStarFilled
+            key={`filled-${index}`}
+            className="text-aqua-teal"
+            stroke={2}
+          />
+        ))}
+        {Array.from({ length: emptyStars }).map((_, index) => (
+          <IconStarFilled key={`empty-${index}`} className="text-gray-300" />
+        ))}
+      </div>
+    );
+  };
+
+  const handleRatingClick = (newRating) => {
+    setRating(newRating);
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto p-6">
-      {/* Book Details */}
-      <div className="flex flex-col md:flex-row items-start rounded-lg border shadow-md p-4">
+    <div className="container w-full h-full mx-auto p-6 flex flex-row font-poppins">
+      {/* Image Section (Outside White Card) */}
+      <div className="flex-none w-[300px] h-[500px] mr-6">
         {imageLinks?.thumbnail ? (
           <img
             src={imageLinks.thumbnail}
             alt={`${title} cover`}
-            className="w-48 h-auto rounded-lg"
+            className="w-full h-full object-cover rounded-lg"
           />
         ) : (
-          <div className="w-48 h-64 bg-gray-200 flex items-center justify-center rounded-lg">
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
             <span className="text-gray-500">No Image Available</span>
           </div>
         )}
-        <div className="p-4 w-full md:w-2/3">
-          <h2 className="text-2xl font-semibold">{title}</h2>
-          <p className="text-lg text-gray-600">
-            {authors ? authors.join(", ") : "Unknown Author"}
+        <Button className="w-full font-semibold mt-5 text-lg">
+          + Add Book
+        </Button>
+        <Button
+          className="dark:bg-pink-flower bg-light-purple w-full font-semibold mt-5 text-lg"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(book.infoLink, "_blank");
+          }}
+        >
+          Buy Book
+        </Button>
+        <div className="flex flex-col items-center mt-5">
+          <div className="flex items-center space-x-1">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <IconStarFilled
+                key={`blank-${index}`}
+                className="text-gray-300 cursor-pointer"
+                onClick={() => handleRatingClick(index + 1)}
+              />
+            ))}
+          </div>
+          <p className=" text-white">Rate this book</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-lg p-10 flex-1">
+        <div className="flex flex-col justify-start">
+          <h2 className="text-3xl font-bold text-deep-purple py-1">{title}</h2>
+          <p className="text-gray-600 text-xl py-1">
+            By: {authors ? authors.join(", ") : "Unknown Author"}
           </p>
-          <p className="mt-4">{description || "No description available."}</p>
-          <p>Published: {publishedDate || "N/A"}</p>
-          <p>Page Count: {pageCount || "N/A"}</p>
-          <button
-            onClick={() => navigate("/")}
-            className="mt-4 bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            Back
-          </button>
+          <div className="flex items-center space-x-4 text-sm font-roboto-serif">
+            <div className="flex items-center space-x-1">
+              {renderStars(book.rating || 0)}
+            </div>
+            <p className=" font-bold">
+              {book.rating || "No rating available"} /5
+            </p>
+            <p className="font-light text-light-purple">no. of reviews</p>
+            <p className="font-light text-light-purple">no. of ratings</p>
+          </div>
+          <p
+            className="font-roboto-mono leading-5 my-3 font-thin text-deep-purple"
+            dangerouslySetInnerHTML={{
+              __html: description || "No description available.",
+            }}
+          />
+          <p className="text-sm text-gray-500">
+            Categories: {book.categories || "No categories available"}
+          </p>
+          <p className="text-gray-700 text-base mt-4">
+            Page Count: {pageCount || "N/A"}
+          </p>
+          <p className="text-gray-700 text-base mt-4">
+            Published: {publishedDate || "Unknown Date"}
+          </p>
         </div>
       </div>
     </div>

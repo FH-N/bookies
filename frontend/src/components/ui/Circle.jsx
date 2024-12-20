@@ -12,8 +12,10 @@ const Circle = ({ size = "60px", className = "" }) => {
 
   return (
     <div
-      className={`rounded-full flex items-center justify-center ${className} ${
-        checked ? "bg-lemon-lime" : "bg-electric-indigo text-white"
+      className={`rounded-full flex items-center justify-center cursor-pointer ${className} ${
+        checked
+          ? "dark:bg-lemon-lime bg-pink-flower"
+          : "dark:bg-electric-indigo bg-lemon-lime text-white"
       }`}
       style={{
         width: size,
@@ -22,9 +24,12 @@ const Circle = ({ size = "60px", className = "" }) => {
       onClick={toggleCheck} // Toggle on click
     >
       {checked ? (
-        <IconCheck className="text-electric-indigo" size="50px" />
+        <IconCheck
+          className="dark:text-electric-indigo text-lemon-lime"
+          size="40px"
+        />
       ) : (
-        <IconX className="text-lemon-lime" size="50px" />
+        <IconX className="dark:text-lemon-lime text-pink-flower" size="40px" />
       )}
     </div>
   );
