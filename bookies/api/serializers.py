@@ -54,6 +54,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
+        extra_kwargs = {
+            'content': {'required': False, 'allow_blank': True},  # Mark content as optional
+        }
 
 class BookClubMembershipSerializer(serializers.ModelSerializer):
     user = UserSerializer()

@@ -1,22 +1,34 @@
 import { useState } from "react";
 import axios from "axios";
+import StarRating from "./ui/Stars";
 
-const ReviewForm = ({ googleBooksId ,onReviewAdded }) => {
+const ReviewForm = ({ googleBooksId, onReviewAdded }) => {
   const [content, setContent] = useState("");
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0); // Default rating set to 0
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const response = await axios.post(
+      const reviewData = { 
+        google_books_id: googleBooksId, 
+        rating 
+      };
+
+      // Include content only if it is not empty
+      if (content.trim()) {
+        reviewData.content = content;
+      }
+
+      await axios.post(
         `http://127.0.0.1:8000/api/reviews/create/`,
-        { google_books_id: googleBooksId, content, rating },
+        reviewData,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
         }
       );
       setContent("");
-      setRating(5);
+      setRating(0); // Reset to 0 after submission
       onReviewAdded();
     } catch (error) {
       console.error(error);
@@ -26,24 +38,16 @@ const ReviewForm = ({ googleBooksId ,onReviewAdded }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block font-semibold">Rating (1-5):</label>
-        <input
-          type="number"
-          min="1"
-          max="5"
-          value={rating}
-          onChange={(e) => setRating(e.target.value)}
-          className="w-full p-2 border rounded"
-          required
-        />
+        <label className="block font-semibold">Rating:</label>
+        <StarRating rating={rating} onRatingChange={setRating} editable={true} />
       </div>
       <div>
-        <label className="block font-semibold">Content:</label>
+        <label className="block font-semibold">Content (Optional):</label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="w-full p-2 border rounded"
-          required
+          placeholder="Write your review (optional)"
         />
       </div>
       <button
@@ -54,7 +58,6 @@ const ReviewForm = ({ googleBooksId ,onReviewAdded }) => {
       </button>
     </form>
   );
-  
 };
 
 export default ReviewForm;
