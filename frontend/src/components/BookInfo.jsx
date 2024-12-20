@@ -10,32 +10,29 @@ const BookInfo = () => {
   const [error, setError] = useState(null);
   const [rating, setRating] = useState(0); // State for the rating
 
-  useEffect(() => {
-    const fetchBookDetails = async () => {
-      try {
-        const response = await fetch(
-          `https://www.googleapis.com/books/v1/volumes/${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch book details.");
-        }
-        const data = await response.json();
-        setBook(data);
-      } catch (err) {
-        setError("Could not fetch book details. Please try again later.");
-      }
-    };
 
+  const fetchBookDetails = async () => {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes/${id}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch book details.");
+      const data = await response.json();
+      setBook(data);
+    } catch (err) {
+      setError("Could not fetch book details. Please try again later.");
+    }
+  };
+
+
+  useEffect(() => {
     fetchBookDetails();
   }, [id]);
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
-  }
 
-  if (!book) {
-    return <p className="text-gray-600">Loading...</p>;
-  }
+
+  if (error) return <p className="text-red-500">{error}</p>;
+  if (!book) return <p className="text-gray-600">Loading...</p>;
 
   const { volumeInfo } = book;
   const { title, authors, description, pageCount, publishedDate, imageLinks } =

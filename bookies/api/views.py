@@ -88,7 +88,7 @@ def validate_google_token(request):
 
 
 
-class ReviewView(APIView):
+class ReviewCreate(APIView):
     permission_classes = [IsAuthenticated]  # Set default permissions
 
     # POST: Create a new review
@@ -99,6 +99,7 @@ class ReviewView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ReviewView(APIView):
     # GET: Get all reviews
     def get(self, request):
         reviews = Review.objects.all()
@@ -147,7 +148,7 @@ class LikeReview(APIView):
             if ReviewLike.objects.filter(review=review, user=request.user).exists():
                 return Response({"error": "You have already liked this review."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create a like for the review
+            # Create a dislike for the review
             ReviewLike.objects.create(review=review, user=request.user)
             review.likes_count += 1
             review.save()
@@ -155,7 +156,6 @@ class LikeReview(APIView):
             return Response({"likes": review.likes_count}, status=status.HTTP_200_OK)
         except Review.DoesNotExist:
             return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
-
         
     # GET: Get all users who liked a review
     def get(self, request, review_id):
@@ -181,11 +181,11 @@ class DeleteReviewLike(APIView):
             if not like:
                 return Response({"error": "You haven't liked this review."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Remove the like
+            # Remove the dislike
             like.delete()
 
-            # Update the likes count safely
-            review.likes_count = max(0, (review.likes_count or 0) - 1)  # Avoid negative likes count
+            # Update the dislikes count safely
+            review.likes_count = max(0, (review.likes_count or 0) - 1)  # Avoid negative dislikes count
             review.save()
 
             return Response({"likes": review.likes_count}, status=status.HTTP_200_OK)

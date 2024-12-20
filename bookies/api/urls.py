@@ -1,20 +1,20 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AllUsersListView, AuthorListView, BookReviewsView, ReviewView, UpdateReview, DeleteReview, LikeReview, ReplyReview, DeleteReviewReply, DislikeReview, DeleteReviewDisLike, DeleteReviewLike, UpdateReviewReply, BookClubView, JoinBookClubView, LeaveBookClubView, BookClubPostView, ClubTagView, PostTagView, UpdateUserAPIView, UserDetailByUserIdAPIView, FollowAPIView, UnfollowAPIView, FollowingsListView, FollowersListView, FollowingStatsAPIView
-
+from .views import *
 router = DefaultRouter()
 
 
 urlpatterns = [
     path('books/', BookReviewsView.as_view(), name='book-list'), 
-    path('reviews/', ReviewView.as_view(), name='review-list-create'), 
+    path('reviews/', ReviewView.as_view(), name='review-list'), 
+    path('reviews/create/', ReviewCreate.as_view(), name='create-review'),
     path('reviews/<int:review_id>/update', UpdateReview.as_view(), name="update-review"),
     path('reviews/<int:review_id>/delete/', DeleteReview.as_view(), name="delete-review"),
     path('reviews/<int:review_id>/like/', LikeReview.as_view(), name='like_review'),
-    path('reviews/<int:review_id>/like/delete', DeleteReviewLike.as_view(), name="delete-review"),
+    path('reviews/<int:review_id>/like/delete', DeleteReviewLike.as_view(), name="delete-like"),
     path('reviews/<int:review_id>/reply/', ReplyReview.as_view(), name='reply_review'),
     path('reviews/reply/<int:reply_id>/delete/', DeleteReviewReply.as_view(), name="delete-reply"),
-    path('reviews/reply/<int:reply_id>/update/', UpdateReviewReply.as_view(), name="delete-reply"),
+    path('reviews/reply/<int:reply_id>/update/', UpdateReviewReply.as_view(), name="update-reply"),
     path('books/<str:google_books_id>/reviews/', BookReviewsView.as_view(), name='book_reviews'),
     path('reviews/<int:review_id>/dislike/', DislikeReview.as_view(), name='dislike_review'),
     path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-review"),
@@ -38,6 +38,7 @@ urlpatterns = [
     path('followings/<int:user_id>/', FollowingsListView.as_view(), name='followings-list'),
     path('followers/<int:user_id>/', FollowersListView.as_view(), name='my-followers'),
     path('following-stats/<int:user_id>/', FollowingStatsAPIView.as_view(), name='following-stats'),
+    path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-dislike"),
 
     path('', include(router.urls)),  
 ]
