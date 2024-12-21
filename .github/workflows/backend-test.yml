@@ -58,6 +58,10 @@ jobs:
           cd bookies  # Ensure you're in the correct folder
           python manage.py makemigrations --check
           python manage.py migrate
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
      
       # Run tests with coverage
