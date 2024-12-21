@@ -40,12 +40,15 @@ jobs:
 
       - name: Apply migrations
         run: |
-          cd bookies 
+          cd bookies
           python manage.py makemigrations --check
           python manage.py migrate
 
       - name: Run tests with coverage
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
           cd bookies
           pytest --cov=bookies/api
-
