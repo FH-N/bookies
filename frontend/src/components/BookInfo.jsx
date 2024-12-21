@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { IconStarFilled } from "@tabler/icons-react";
 import Button from "./ui/Button";
+import ReadingProgress from "./ReadingProgress";
 
 const BookInfo = () => {
   const { id } = useParams();
@@ -9,7 +10,6 @@ const BookInfo = () => {
   const [book, setBook] = useState(null);
   const [error, setError] = useState(null);
   const [rating, setRating] = useState(0); // State for the rating
-
 
   const fetchBookDetails = async () => {
     try {
@@ -24,12 +24,9 @@ const BookInfo = () => {
     }
   };
 
-
   useEffect(() => {
     fetchBookDetails();
   }, [id]);
-
-
 
   if (error) return <p className="text-red-500">{error}</p>;
   if (!book) return <p className="text-gray-600">Loading...</p>;
@@ -101,6 +98,7 @@ const BookInfo = () => {
           </div>
           <p className=" text-white">Rate this book</p>
         </div>
+        <ReadingProgress bookId={book.id} totalPages={pageCount} />
       </div>
 
       <div className="bg-white rounded-lg shadow-lg p-10 flex-1">

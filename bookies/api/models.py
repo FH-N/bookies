@@ -1,7 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User, AbstractUser
-from django.utils.text import slugify
-from django.contrib.auth.hashers import make_password , check_password
+from django.contrib.auth.models import User
 
 
 class Review(models.Model):
@@ -117,3 +115,15 @@ class Followings(models.Model):
     def __str__(self):
         return f"{self.user.username} follows {self.followed_user.username}"
 
+
+class ReadingProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    google_books_id = models.CharField(max_length=100)
+    current_page = models.PositiveIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def calculate_progress_percentage(self):
+        return (self.current_page / self.book.total_pages) * 100
+
+    def __str__(self):
+        return f"{self.user.username} - {self.book.title}"
