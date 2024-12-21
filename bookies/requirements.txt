@@ -16,4 +16,6 @@ requests
 rest-framework-simplejwt
 python-decouple
 pytest
+pytest-cov
+
 
