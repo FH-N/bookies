@@ -1,31 +1,65 @@
 from rest_framework import serializers
-from .models import Review , User, BookClub, BookClubMembership, BookClubDiscussion , ReviewReply, ReviewLike, ReviewDisLike
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, PostReply
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, ReadingProgress
 
 
-
+#User serializers
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(write_only=True) 
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('id', 'username', 'email','password', 'role')
+        extra_kwargs = { 'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            # user_type=validated_data.get('user_type', 'reader'),
-        )
-        user.set_password(validated_data['password'])  
-        user.save()
+        role = validated_data.pop('role', 'viewer')
+
+        user = User.objects.create_user(**validated_data)
+
+        user.profile.role = role
+        user.profile.save()
+
         return user
+    
+    def update(self, instance, validated_data):
+        """
+        Update the user fields: username, email, password, and profile fields like role and bio.
+        """
+        # Update user fields
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+
+        # Update password if provided
+        password = validated_data.get('password', None)
+        if password:
+            instance.set_password(password)  # Hash the new password securely
+
+        # Save the updated user instance
+        instance.save()
+
+        # Update UserProfile fields (role, bio)
+        profile_data = self.context['request'].data  # Directly fetch extra fields like role & bio
+        profile = instance.profile  # Assumes a OneToOne relationship exists with UserProfile
+
+        role = profile_data.get('role', profile.role)
+        bio = profile_data.get('bio', profile.bio)
+
+        profile.role = role
+        profile.bio = bio
+        profile.save()
+
+        return instance
 
 class ReviewReplySerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = ReviewReply
-        fields = ['id', 'user', 'content', 'created_at']
+        fields = ['id', 'user','user_id', 'content', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
+
 
 class ReviewLikeSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
@@ -45,36 +79,93 @@ class ReviewDisLikeSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
     replies = ReviewReplySerializer(many=True, read_only=True)
     likes = ReviewLikeSerializer(many=True, read_only=True)
     dislikes = ReviewDisLikeSerializer(many=True, read_only=True)
     class Meta:
         model = Review
-        fields = ['id', 'user', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
+        fields = ['id', 'user','user_id', 'google_books_id', 'content', 'rating', 'likes','dislikes', 'replies', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
+        extra_kwargs = {
+            'content': {'required': False, 'allow_blank': True},  # Mark content as optional
+        }
 
-class BookClubMembershipSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    role = serializers.ChoiceField(choices=BookClubMembership.ROLE_CHOICES)
 
+class ClubTagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BookClubMembership
-        fields = ['user', 'role', 'joined_at']
+        model = ClubTag
+        fields = ['id', 'name']
+
 
 class BookClubSerializer(serializers.ModelSerializer):
-    owner = UserSerializer()
-    members = BookClubMembershipSerializer(many=True, read_only=True)
-    is_private = serializers.BooleanField()
+    members = serializers.StringRelatedField(many=True)
+    club_tags = ClubTagSerializer(many=True, read_only=True)  # Nested serializer for tags
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=ClubTag.objects.all(), write_only=True, source='club_tags'
+    )  
+    is_member = serializers.SerializerMethodField()
+    owner = serializers.StringRelatedField()  # Display owner's username
 
     class Meta:
         model = BookClub
-        fields = ['id', 'name', 'description', 'created_at', 'updated_at', 'slug', 'owner', 'members', 'is_private']
+        fields = [
+            'id', 
+            'name', 
+            'description', 
+            'members', 
+            'club_tags', 
+            'tag_ids', 
+            'created_at', 
+            'is_member', 
+            'owner'  
+        ]
 
-class BookClubDiscussionSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer()
-    book_club = BookClubSerializer()
+    def get_is_member(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.members.filter(id=request.user.id).exists()
+        return False
+
+
+class PostTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostTag
+        fields = ['id', 'name']  # Serialize the PostTag model with 'id' and 'name'
+
+
+class PostReplySerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    created_at = serializers.ReadOnlyField()
 
     class Meta:
-        model = BookClubDiscussion
-        fields = ['id', 'book_club', 'title', 'content', 'created_by', 'created_at', 'updated_at']
+        model = PostReply
+        fields = ['id', 'author', 'content', 'created_at']
 
+
+class BookClubPostSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    created_at = serializers.ReadOnlyField()
+    post_tags = PostTagSerializer(many=True, read_only=True)  # Add PostTagSerializer to include post tags
+    likes = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), many=True)  # Include likes
+    total_likes = serializers.ReadOnlyField()  # Add total likes as a read-only field
+    replies = PostReplySerializer(many=True, read_only=True)  # Include replies using PostReplySerializer
+
+    class Meta:
+        model = BookClubPost
+        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags', 'likes', 'total_likes', 'replies']
+
+
+class ReadingProgressSerializer(serializers.ModelSerializer):
+    progress_percentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReadingProgress
+        fields = ['user', 'google_books_id', 'current_page', 'updated_at', 'progress_percentage']
+        read_only_fields = ['user']
+
+    def get_progress_percentage(self, obj):
+        total_pages = self.context.get('total_pages', None)
+        if total_pages and total_pages > 0:
+            return (obj.current_page / total_pages) * 100
+        return 0.0
