@@ -40,17 +40,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r bookies/requirements.txt
-
-       # Debug environment variables (for troubleshooting purposes)
-      - name: Debug environment variables
-        run: |
-          echo "GOOGLE_BOOKS_API_KEY: $GOOGLE_BOOKS_API_KEY"
-          echo "CLIENT_ID: $CLIENT_ID"
-          echo "CLIENT_SECRET: $CLIENT_SECRET"
-        env:
-          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          
 
       # Apply migrations
       - name: Apply migrations
@@ -66,10 +56,10 @@ jobs:
      
       # Run tests with coverage
       - name: Run tests with coverage
+        run: |
+          cd bookies  
+          pytest --cov=bookies/api  
         env:
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-        run: |
-          cd bookies  # Navigate to your app directory
-          pytest --cov=bookies/api  # Adjust the coverage target as necessary
