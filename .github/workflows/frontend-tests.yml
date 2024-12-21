@@ -24,4 +24,4 @@ jobs:
 
       - name: Run tests
         working-directory: frontend  # Adjust to the path of your React app
-        run: npm test -- --watchAll=false
+        run: npm test

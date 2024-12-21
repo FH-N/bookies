@@ -3,7 +3,7 @@ name: Django Backend Tests
 on:
   pull_request:
     branches:
-      - main  
+      - main
 
 jobs:
   test:
@@ -25,27 +25,53 @@ jobs:
           - 5432:5432
 
     steps:
+      # Check out the code
       - name: Check out code
         uses: actions/checkout@v3
 
+      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
+      # Set DJANGO_SETTINGS_MODULE for testing
+      - name: Set DJANGO_SETTINGS_MODULE for testing
+        run: echo "DJANGO_SETTINGS_MODULE=bookies.settings" >> $GITHUB_ENV
+
+      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r bookies/requirements.txt  
+          pip install -r bookies/requirements.txt
 
-      - name: Run tests
+      # Wait for PostgreSQL to be ready
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for database..."
+            sleep 2
+          done
+
+      # Apply migrations
+      - name: Apply migrations
+        run: |
+          cd bookies  # Ensure you're in the correct folder
+          python manage.py makemigrations --check
+          python manage.py migrate
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          DJANGO_SETTINGS_MODULE: bookies.settings
+
+      # Run tests with coverage
+      - name: Run tests with coverage
         run: |
-          cd bookies 
-          python manage.py makemigrations --check
-          python manage.py migrate
-          pytest --cov=api api/tests.py
+          cd bookies
+          pytest -v --cov=bookies/api
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          DJANGO_SETTINGS_MODULE: bookies.settings
