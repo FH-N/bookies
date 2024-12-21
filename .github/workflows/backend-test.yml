@@ -58,7 +58,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd bookies  
-          pytest -v --cov=bookies/api/tests.py
+          pytest -v --cov=bookies/api/
         env:
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
