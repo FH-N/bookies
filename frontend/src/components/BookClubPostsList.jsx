@@ -19,8 +19,12 @@ const BookClubPostsList = ({ clubId }) => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        setPosts(res.data);
-        setFilteredPosts(res.data); // Initially, show all posts
+        // Sort posts by created_at (newest first)
+        const sortedPosts = res.data.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+        setPosts(sortedPosts);
+        setFilteredPosts(sortedPosts); // Initially, show all posts sorted
         setLoading(false); // Set loading to false after fetching is complete
       })
       .catch((err) => {
@@ -61,16 +65,21 @@ const BookClubPostsList = ({ clubId }) => {
   };
 
   useEffect(() => {
-    if (selectedTags.length === 0) {
-      setFilteredPosts(posts); // If no tags are selected, show all posts
-    } else {
-      setFilteredPosts(
-        posts.filter((post) =>
-          post.post_tags.some((postTag) => selectedTags.includes(postTag.name))
-        )
+    let filtered = posts;
+
+    if (selectedTags.length > 0) {
+      filtered = posts.filter((post) =>
+        post.post_tags.some((postTag) => selectedTags.includes(postTag.name))
       );
     }
-  }, [selectedTags, posts]); // Filter posts whenever selectedTags or posts change
+
+    // Sort the filtered posts by creation date
+    filtered = filtered.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+
+    setFilteredPosts(filtered);
+  }, [selectedTags, posts]); // Filter and sort posts whenever selectedTags or posts change
 
   if (loading) {
     return (

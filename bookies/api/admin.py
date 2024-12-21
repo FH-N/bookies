@@ -9,6 +9,8 @@ from .models import (
     BookClub, 
     ClubTag,
     PostTag,
+    PostReply,
+    BookClubPost,
 )
 
 # Inline UserProfile for User
@@ -44,6 +46,20 @@ class BookClubAdmin(admin.ModelAdmin):
     raw_id_fields = ('members',)  # Display raw IDs for members for performance optimization
 
 
+class BookClubPostAdmin(admin.ModelAdmin):
+    list_display = ['id', 'club', 'author', 'content', 'created_at', 'total_likes']
+    search_fields = ['content', 'author__username']
+    list_filter = ['created_at', 'club']
+
+    def total_likes(self, obj):
+        return obj.likes.count() 
+    
+
+class PostReplyAdmin(admin.ModelAdmin):
+    list_display = ['id', 'author', 'content', 'created_at']
+    search_fields = ['content', 'author__username']
+
+
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'role')
 
@@ -56,6 +72,8 @@ admin.site.register(BookClub, BookClubAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(ClubTag, ClubTagAdmin)
 admin.site.register(PostTag, PostTagAdmin)
+admin.site.register(BookClubPost, BookClubPostAdmin)
+admin.site.register(PostReply, PostReplyAdmin)
 
 # Unregister the default User admin and register the custom one
 admin.site.unregister(User)

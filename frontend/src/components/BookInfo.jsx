@@ -60,7 +60,7 @@ const BookInfo = () => {
   };
 
   return (
-    <div className="container w-full h-full mx-auto p-6 flex flex-row font-poppins">
+    <div className="container w-full min-h-screen mx-auto p-6 flex flex-row font-poppins">
       {/* Image Section (Outside White Card) */}
       <div className="flex-none w-[300px] h-[500px] mr-6">
         {imageLinks?.thumbnail ? (
@@ -101,7 +101,7 @@ const BookInfo = () => {
         <ReadingProgress bookId={book.id} totalPages={pageCount} />
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-10 flex-1">
+      <div className="bg-white rounded-lg shadow-lg p-10 flex-1 h-fit">
         <div className="flex flex-col justify-start">
           <h2 className="text-3xl font-bold text-deep-purple py-1">{title}</h2>
           <p className="text-gray-600 text-xl py-1">
