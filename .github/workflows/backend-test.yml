@@ -63,13 +63,15 @@ jobs:
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          DJANGO_SETTINGS_MODULE: bookies.settings
 
       # Run tests with coverage
       - name: Run tests with coverage
         run: |
-          cd bookies  
+          cd bookies
           pytest -v --cov=bookies/api
         env:
           GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          DJANGO_SETTINGS_MODULE: bookies.settings
