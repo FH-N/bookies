@@ -40,7 +40,7 @@ jobs:
 
       - name: Apply migrations
         run: |
-          cd bookies  # Navigate to the correct directory containing manage.py
+          cd bookies 
           python manage.py makemigrations --check
           python manage.py migrate
 
@@ -48,3 +48,4 @@ jobs:
         run: |
           cd bookies
           pytest --cov=bookies/api
+
