@@ -40,7 +40,7 @@ jobs:
 
       - name: Apply migrations
         run: |
-          cd bookies
+          cd bookies  # Navigate to the correct directory containing manage.py
           python manage.py makemigrations --check
           python manage.py migrate
 
