@@ -37,11 +37,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r bookies/requirements.txt  
+
       - name: Run tests
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
-          cd bookies  # Navigate to the 'bookies' folder where your Django app is
+          cd bookies 
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov=bookies  # Adjust the coverage target if necessary
+          pytest --cov=bookies 
