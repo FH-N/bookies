@@ -3,12 +3,10 @@ import { useAuthentication } from "./auth";
 
 //Import Pages
 import BookSearch from "./pages/SearchPage";
-import BookInfo from "./components/BookInfo";
 import RecommendationPage from "./pages/RecommendationPage";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/ui/Navbar";
 import RedirectGoogleAuth from "./components/GoogleRedirectHandler";
-import ReviewForm from "./components/CreateReview";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
 import BookClubList from "./pages/ClubsPage";
@@ -18,6 +16,7 @@ import UserProfilePage from "./pages/UserProfilePage";
 import AllUserListPage from "./pages/AllUserListPage";
 import MyFollowingsPage from "./pages/MyFollowings";
 import MyFollowersPage from "./pages/MyFollowersPage";
+import BookDetailsPage from "./pages/BookDetailsPage";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
@@ -55,8 +54,7 @@ const App = () => {
           <Route path="/register" element={<ProtectedRegister />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/search" element={<BookSearch />} />
-          <Route path="/book/:id" element={<BookInfo />} />
-          <Route path="/review" element={<ReviewForm />} />
+          <Route path="/book/:id" element={<BookDetailsPage />} />
           <Route path="/" element={<ConditionalHome />} />
           <Route path="/recommendation" element={<RecommendationPage />} />
           <Route path="/bookclubs" element={<BookClubList />} />
