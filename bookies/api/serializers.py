@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, PostReply
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, ReadingProgress
 
 
 #User serializers
@@ -154,3 +155,17 @@ class BookClubPostSerializer(serializers.ModelSerializer):
         model = BookClubPost
         fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags', 'likes', 'total_likes', 'replies']
 
+
+class ReadingProgressSerializer(serializers.ModelSerializer):
+    progress_percentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReadingProgress
+        fields = ['user', 'google_books_id', 'current_page', 'updated_at', 'progress_percentage']
+        read_only_fields = ['user']
+
+    def get_progress_percentage(self, obj):
+        total_pages = self.context.get('total_pages', None)
+        if total_pages and total_pages > 0:
+            return (obj.current_page / total_pages) * 100
+        return 0.0

@@ -3,14 +3,12 @@ import { useParams } from "react-router-dom";
 import BookInfo from "../components/BookInfo";
 import ReviewList from "../components/ReviewList";
 
-
 const BookDetailsPage = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   return (
-    <div className="page-container">
-      
-        <BookInfo />
-        <ReviewList id ={id}/>
+    <div className="w-full h-full container">
+      <BookInfo />
+      {/* <ReviewList id={id} /> */}
     </div>
   );
 };

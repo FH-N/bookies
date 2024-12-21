@@ -42,6 +42,8 @@ urlpatterns = [
     path('followers/<int:user_id>/', FollowersListView.as_view(), name='my-followers'),
     path('following-stats/<int:user_id>/', FollowingStatsAPIView.as_view(), name='following-stats'),
     path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-dislike"),
+    path('progress/update/', UpdateProgressView.as_view(), name='update-progress'),
+    path('progress/user/', UserProgressView.as_view(), name='user-progress'),
 
     path('', include(router.urls)),  
 ]
