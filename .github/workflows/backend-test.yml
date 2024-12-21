@@ -41,14 +41,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r bookies/requirements.txt
 
-      # Apply migrations
-      - name: Apply migrations
-        run: |
-          cd bookies  # Ensure you're in the correct folder
-          python manage.py makemigrations --check
-          python manage.py migrate
-
-      # Debug environment variables (for troubleshooting purposes)
+       # Debug environment variables (for troubleshooting purposes)
       - name: Debug environment variables
         run: |
           echo "GOOGLE_BOOKS_API_KEY: $GOOGLE_BOOKS_API_KEY"
@@ -59,6 +52,14 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
 
+      # Apply migrations
+      - name: Apply migrations
+        run: |
+          cd bookies  # Ensure you're in the correct folder
+          python manage.py makemigrations --check
+          python manage.py migrate
+
+     
       # Run tests with coverage
       - name: Run tests with coverage
         env:
