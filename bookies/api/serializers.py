@@ -149,6 +149,7 @@ class ReadingProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingProgress
         fields = ['user', 'google_books_id', 'current_page', 'updated_at', 'progress_percentage']
+        read_only_fields = ['user']
 
     def get_progress_percentage(self, obj):
         total_pages = self.context.get('total_pages', None)

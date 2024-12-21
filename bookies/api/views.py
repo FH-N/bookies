@@ -21,6 +21,7 @@ import json
 # Local imports
 from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, Followings, UserProfile, ReadingProgress
 from .serializers import *
+from .utils import get_book_total_pages 
 
 from django.contrib.auth import authenticate
 
@@ -934,19 +935,31 @@ class FollowingStatsAPIView(APIView):
 
 class UpdateProgressView(APIView):
     def post(self, request):
-        serializer = ReadingProgressSerializer(data=request.data)
+        serializer = ReadingProgressSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
+            google_books_id = serializer.validated_data['google_books_id']
+            current_page = serializer.validated_data['current_page']
+            
             progress, created = ReadingProgress.objects.update_or_create(
                 user=request.user,
-                book_id=serializer.validated_data['book_id'],
-                defaults={'current_page': serializer.validated_data['current_page']}
+                google_books_id=google_books_id,
+                defaults={'current_page': current_page}
             )
-            return Response({"message": "Progress updated successfully"})
+            return Response({"message": "Progress updated successfully"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
 class UserProgressView(APIView):
     def get(self, request):
         progress = ReadingProgress.objects.filter(user=request.user)
-        serializer = ReadingProgressSerializer(progress, many=True)
-        return Response(serializer.data)
+        progress_data = []
+        
+        for entry in progress:
+            total_pages = get_book_total_pages(entry.google_books_id)
+            
+            serializer = ReadingProgressSerializer(
+                entry,
+                context={'total_pages': total_pages} 
+            )
+            progress_data.append(serializer.data)
+
+        return Response(progress_data, status=status.HTTP_200_OK)
