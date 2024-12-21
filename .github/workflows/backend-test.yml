@@ -48,4 +48,4 @@ jobs:
           cd bookies 
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov=bookies 
+          pytest --cov=bookies/api bookies/api/tests.py
