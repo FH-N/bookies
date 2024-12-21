@@ -1,0 +1,17 @@
+asgiref
+Django
+cryptography
+Django
+django-allauth
+django-cors-headers
+djangorestframework
+sqlparse
+tzdata
+requests
+django-allauth
+credentials
+djangorestframework-simplejwt
+PyJWT
+requests
+rest-framework-simplejwt
+

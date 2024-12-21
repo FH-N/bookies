@@ -1,2 +1,8 @@
+#ignore node module
 node_modules/
-google/credentials.py
+
+# Ignore credentials
+bookies/googlebooks/credentials.py
+
+# Ignore environment files
+.env
