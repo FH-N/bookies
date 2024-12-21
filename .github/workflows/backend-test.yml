@@ -47,4 +47,4 @@ jobs:
         run: |
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov=bookies/api bookies/api/tests.py
+          pytest --cov=api api/tests.py
