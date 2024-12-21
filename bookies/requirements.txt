@@ -14,4 +14,4 @@ djangorestframework-simplejwt
 PyJWT
 requests
 rest-framework-simplejwt
-decouple
+python-decouple
