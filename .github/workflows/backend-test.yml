@@ -25,23 +25,41 @@ jobs:
           - 5432:5432
 
     steps:
+      # Check out the code
       - name: Check out code
         uses: actions/checkout@v3
 
+      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
+      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r bookies/requirements.txt  
-      - name: Run tests
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+          pip install -r bookies/requirements.txt
+          
+
+      # Apply migrations
+      - name: Apply migrations
         run: |
-          cd bookies  # Navigate to the 'bookies' folder where your Django app is
+          cd bookies  # Ensure you're in the correct folder
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov=bookies  # Adjust the coverage target if necessary
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+
+     
+      # Run tests with coverage
+      - name: Run tests with coverage
+        run: |
+          cd bookies  
+          pytest -v --cov=bookies/api/tests.py
+        env:
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
