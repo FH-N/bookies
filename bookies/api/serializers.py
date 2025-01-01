@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, PostReply
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, ReadingProgress,Book
+from .models import *
 
 
 #User serializers
@@ -177,10 +176,6 @@ class BookSerializer(serializers.ModelSerializer):
         fields = ['book_id', 'title', 'author', 'description', 'thumbnail']
 
 
-# serializers.py
-from rest_framework import serializers
-from .models import Book, Bookshelf
-
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
@@ -192,8 +187,7 @@ class BookshelfSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookshelf
         fields = ['id', 'user', 'books']
-
-from rest_framework import serializers
-
+        
 class AddBookSerializer(serializers.Serializer):
     book_id = serializers.CharField(required=True)
+

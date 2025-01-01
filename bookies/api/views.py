@@ -20,7 +20,7 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, Followings, UserProfile, ReadingProgress
+from .models import *
 from .serializers import *
 from .utils import get_book_total_pages 
 
@@ -1179,27 +1179,27 @@ class BookshelfViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['post'], url_path='add-book')
-    def add_book_to_bookshelf(self, request,pk=None):    
+    def add_book_to_bookshelf(self, request, pk=None):
         logger.debug("Received request to add book to bookshelf")
         logger.debug(f"Request data: {request.data}")
         logger.debug(f"Request user: {request.user}")
+        
         serializer = AddBookSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         book_id = serializer.validated_data['book_id']
         user = request.user
 
-    # Get the book object
+        # Get the book object
         book = get_object_or_404(Book, book_id=book_id)
 
-    # Get or create the user's bookshelf
+        # Get or create the user's bookshelf
         bookshelf, created = Bookshelf.objects.get_or_create(user=user)
 
-    # Add the book to the bookshelf
+        # Add the book to the bookshelf
         bookshelf.books.add(book)
 
-    # Return success response
+        # Return success response
         return Response({'message': 'Book added to bookshelf successfully'}, status=201)
-    
 
     @action(detail=True, methods=['get'], url_path='mybooks')
     def retrieve_books(self, request, pk=None):
@@ -1217,3 +1217,31 @@ class BookshelfViewSet(viewsets.ModelViewSet):
             return Response(serialized_books.data, status=200)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+    @action(detail=False, methods=['post'], url_path='remove-book')
+    def remove_book_from_bookshelf(self, request, pk=None):
+        logger.debug("Received request to remove book from bookshelf")
+        logger.debug(f"Request data: {request.data}")
+        logger.debug(f"Request user: {request.user}")
+
+        # Validate input data
+        serializer = AddBookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book_id = serializer.validated_data['book_id']
+        user = request.user
+
+        # Get the book object
+        book = get_object_or_404(Book, book_id=book_id)
+
+        # Get the user's bookshelf
+        bookshelf = get_object_or_404(Bookshelf.objects.filter(user=user))
+
+        # Check if the book is in the user's bookshelf
+        if book not in bookshelf.books.all():
+            return Response({'message': 'Book not found in your bookshelf'}, status=404)
+
+        # Remove the book from the bookshelf
+        bookshelf.books.remove(book)
+
+        # Return success response
+        return Response({'message': 'Book removed from bookshelf successfully'}, status=200)

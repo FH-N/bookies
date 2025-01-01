@@ -7,7 +7,7 @@ router.register(r'book', BookViewSet)
 router.register(r'bookshelves', BookshelfViewSet)
 
 urlpatterns = [
-    path('books/', BookReviewsView.as_view(), name='book-list'), 
+    # path('books/', BookReviewsView.as_view(), name='book-list'), 
     path('reviews/', ReviewView.as_view(), name='review-list'), 
     path('reviews/create/', ReviewCreate.as_view(), name='create-review'),
     path('reviews/<int:review_id>/update', UpdateReview.as_view(), name="update-review"),
@@ -46,5 +46,11 @@ urlpatterns = [
     path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-dislike"),
     path('progress/update/', UpdateProgressView.as_view(), name='update-progress'),
     path('progress/user/', UserProgressView.as_view(), name='user-progress'),
+
+    path('book/all-books/', BookViewSet.as_view({'get': 'get_books'}), name='all-books'),
+    path('bookshelves/add-book/', BookshelfViewSet.as_view({'post': 'add_book_to_bookshelf'}), name='add-book-to-bookshelf'),
+    path('bookshelves/remove-book/', BookshelfViewSet.as_view({'post': 'remove_book_from_bookshelf'}), name='remove-book-from-bookshelf'),  
+    path('bookshelves/mybooks/', BookshelfViewSet.as_view({'get': 'retrieve_books'}), name='my-books'),
+
     path('', include(router.urls)),  
 ]
