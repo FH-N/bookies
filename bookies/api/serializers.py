@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, PostReply
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, ReadingProgress
+from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, ReadingProgress,Book
 
 
 #User serializers
@@ -169,3 +169,31 @@ class ReadingProgressSerializer(serializers.ModelSerializer):
         if total_pages and total_pages > 0:
             return (obj.current_page / total_pages) * 100
         return 0.0
+    
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ['book_id', 'title', 'author', 'description', 'thumbnail']
+
+
+# serializers.py
+from rest_framework import serializers
+from .models import Book, Bookshelf
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ['book_id', 'title', 'author', 'description', 'thumbnail']
+
+class BookshelfSerializer(serializers.ModelSerializer):
+    books = BookSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Bookshelf
+        fields = ['id', 'user', 'books']
+
+from rest_framework import serializers
+
+class AddBookSerializer(serializers.Serializer):
+    book_id = serializers.CharField(required=True)
