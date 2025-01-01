@@ -24,6 +24,90 @@ const BookInfo = () => {
     }
   };
 
+  async function refreshToken() {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken })
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.access);
+        return data.access;
+      } else {
+        console.error('Failed to refresh token:', response.status);
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
+        // Handle refresh token errors
+        alert('Session expired. Please log in again.');
+        //window.location.href = '/login'; // Redirect to login page
+      }
+    } catch (err) {
+      console.error('Error refreshing token:', err);
+      alert('An error occurred while refreshing the token. Please try again.');
+    }
+  }
+  
+  async function handleAddBook() {
+    if (!book) {
+      alert("Book details are not available.");
+      return;
+    }
+  
+    const bookDetails = {
+      book_id: id,
+      title: book.volumeInfo.title,
+      author: book.volumeInfo.authors ? book.volumeInfo.authors.join(", ") : "Unknown Author",
+      description: book.volumeInfo.description || "No description available.",
+      thumbnail: book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : null,
+    };
+  
+    let token = localStorage.getItem('token');
+  
+    try {
+      let response = await fetch('http://127.0.0.1:8000/api/bookshelves/add-book/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(bookDetails)
+      });
+  
+      if (response.status === 401) { // Unauthorized, possibly due to invalid/expired token
+        token = await refreshToken();
+        response = await fetch('http://127.0.0.1:8000/api/bookshelves/add-book/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(bookDetails)
+        });
+      }
+  
+      if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await response.json();
+          alert(data.message || 'Book added to bookshelf successfully!');
+        } else {
+          alert('Book added to bookshelf successfully!');
+        }
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to add book: ${errorData.message}`);
+      }
+    } catch (err) {
+      console.error('Error adding book:', err);
+      alert('An error occurred while adding the book. Please try again.');
+    }
+  }
+
   useEffect(() => {
     fetchBookDetails();
   }, [id]);
@@ -74,7 +158,10 @@ const BookInfo = () => {
             <span className="text-gray-500">No Image Available</span>
           </div>
         )}
-        <Button className="w-full font-semibold mt-5 text-lg">
+        <Button 
+          className="w-full font-semibold mt-5 text-lg"
+          onClick={handleAddBook}
+        >
           + Add Book
         </Button>
         <Button
