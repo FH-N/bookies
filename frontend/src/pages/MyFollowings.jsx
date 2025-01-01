@@ -7,28 +7,20 @@ const MyFollowingsPage = () => {
   const currentUserId = localStorage.getItem("user_id"); // Get the current user ID from localStorage
 
   useEffect(() => {
-    // Fetch authors from the API
-    //console.log('URL : ' + 'http://localhost:8000/api/allusers/?user_id=' + currentUserId  );
+    // Fetch followings and their status in a single request
+    console.log("Current User ID:", currentUserId); // Log to check the current user ID
     axios
       .get(`http://localhost:8000/api/followings/${currentUserId}`)
       .then((response) => {
-        setUsers(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching authors:", error);
-      });
-  }, []);
+        console.log("API Response:", response.data); // Log response to check its structure
+        const followings = response.data; // Assuming the response is an array of followed users
 
-  useEffect(() => {
-    // Fetch following status for the current user
-    axios
-      .get(`http://localhost:8000/api/followings/${currentUserId}`)
-      .then((response) => {
-        const followings = response.data; // List of followed user IDs
+        setUsers(followings);
+
+        // Create a status object to track the following state
         const status = {};
         followings.forEach((follow) => {
-          console.log("followed" + follow);
-          status[follow.followed_user_id] = true;
+          status[follow.followed_user_id] = true; // Assuming response contains `followed_user_id`
         });
         setFollowingStatus(status);
       })
@@ -89,7 +81,8 @@ const MyFollowingsPage = () => {
               <strong>Username:</strong> {user.username}
             </p>
             <p>
-              <strong>Type:</strong> {user.role == "User" ? "Booker" : "Author"}
+              <strong>Type:</strong>{" "}
+              {user.role === "User" ? "Booker" : "Author"}
             </p>
             <p>
               <strong>Email:</strong> {user.email || "No email available"}

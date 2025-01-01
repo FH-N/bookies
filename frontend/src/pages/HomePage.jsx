@@ -4,9 +4,41 @@ import SideNav from "../components/ui/SideNav";
 import Line from "../components/ui/Line";
 import RecommendedCategory from "../components/RecommendedCategory";
 import { useAuthentication } from "../auth";
+import { useEffect, useState } from "react";
 
 const HomePage = () => {
-  const { user } = useAuthentication();
+  const [currentUserData, setCurrentUserData] = useState(null);
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const currentUser = await fetch(
+          "http://127.0.0.1:8000/api/auth/user/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!currentUser.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        const currentUserData = await currentUser.json();
+        setCurrentUserData(currentUserData);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    if (token) {
+      fetchUserData();
+    }
+  }, [token]);
 
   return (
     <div className="container min-h-screen flex flex-row mt-8 text-white font-poppins">
@@ -24,7 +56,7 @@ const HomePage = () => {
         <h1 className="text-4xl font-bold mb-6 tracking-wide px-8">
           Welcome back&nbsp;
           <span className="bg-gradient-to-b dark:from-aqua-teal dark:to-light-purple from-lemon-lime to-pink-flower from-45% dark bg-clip-text text-transparent">
-            {user?.username || "User"}
+            {currentUserData?.username || "User"}
           </span>
           !
         </h1>

@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
-
+from django.utils.timezone import now
+from .subject import Subject
+from .observer import NotificationObserver
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -98,6 +100,24 @@ class BookClubPost(models.Model):
     @property
     def total_likes(self):
         return self.likes.count()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        Subject.__init__(self)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new:
+            self.notify_observers()
+
+    def notify_observers(self):
+        message = f"New post in '{self.club.name}' by {self.author.username}: {self.title}"
+        for member in self.club.members.exclude(pk=self.author.pk):
+            observer = NotificationObserver(user=member)
+            self.attach(observer)
+        self.notify(message=message)
 
 
 class ClubPost(models.Model): 
@@ -167,3 +187,12 @@ class Bookshelf(models.Model):
 
     def __str__(self):
         return f"Bookshelf {self.bookshelf_id} of {self.user.username}"
+    
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"Notification for {self.user.username}"

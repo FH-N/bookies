@@ -930,6 +930,7 @@ class AuthorListView(APIView):
         return Response(author_list, status=status.HTTP_200_OK)
     
     
+
 class AllUsersListView(APIView):
     permission_classes = [AllowAny]
 
@@ -947,16 +948,24 @@ class AllUsersListView(APIView):
         # Exclude the user with the given user_id
         users = User.objects.exclude(id=excluded_user_id)
 
-        user_list = [
-            {
+        user_list = []
+        for user in users:
+            # Get related profile or set defaults if missing
+            try:
+                profile = user.profile
+                role = profile.role if profile else 'User'  # Fallback if profile is None
+                bio = profile.bio if profile else None  # Fallback if profile is None
+            except UserProfile.DoesNotExist:
+                role = 'User'  # Default role if profile does not exist
+                bio = None  # Default bio if profile does not exist
+
+            user_list.append({
                 "userid": user.id,
                 "username": user.username,
                 "email": user.email,
-                "role": getattr(user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
-                "bio": getattr(user.profile, 'bio', None),      # Get bio from UserProfile if available
-            }
-            for user in users
-        ]
+                "role": role,
+                "bio": bio,
+            })
 
         return Response(user_list, status=status.HTTP_200_OK)
 
@@ -1021,6 +1030,7 @@ class UnfollowAPIView(APIView):
     
 class FollowingsListView(APIView):
     permission_classes = [AllowAny]
+    
     def get(self, request, user_id):
         try:
             # Validate the current_user_id
@@ -1032,16 +1042,25 @@ class FollowingsListView(APIView):
         followings = Followings.objects.filter(user=user).select_related('followed_user')
 
         # Prepare the response data
-        following_list = [
-            {
-                "followed_user_id": following.followed_user.id,
-                "username": following.followed_user.username,
-                "email": following.followed_user.email,
-                "role": getattr(following.followed_user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
-                "bio": getattr(following.followed_user.profile, 'bio', None),      # Get bio from UserProfile if available
-            }
-            for following in followings
-        ]
+        following_list = []
+        for following in followings:
+            followed_user = following.followed_user
+            try:
+                # Attempt to get the profile data
+                role = followed_user.profile.role
+                bio = followed_user.profile.bio
+            except AttributeError:
+                # If profile is missing, use default values
+                role = 'User'
+                bio = None
+            
+            following_list.append({
+                "followed_user_id": followed_user.id,
+                "username": followed_user.username,
+                "email": followed_user.email,
+                "role": role,
+                "bio": bio,
+            })
 
         return Response(following_list, status=status.HTTP_200_OK)
     
@@ -1245,3 +1264,22 @@ class BookshelfViewSet(viewsets.ModelViewSet):
 
         # Return success response
         return Response({'message': 'Book removed from bookshelf successfully'}, status=200)
+    
+
+# views.py
+from django.http import JsonResponse
+from .models import Notification
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def get_notifications(request):
+    notifications = request.user.notifications.filter(is_read=False)
+    data = [
+        {
+            "id": notification.id,
+            "message": notification.message,
+            "timestamp": notification.timestamp,
+        }
+        for notification in notifications
+    ]
+    return JsonResponse({"notifications": data})
