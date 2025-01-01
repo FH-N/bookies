@@ -12,6 +12,15 @@ const BookInfo = () => {
   const [rating, setRating] = useState(0); // State for the rating
   const [isBookAdded, setIsBookAdded] = useState(false); // State to track if book is added
 
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
+
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
   const fetchBookDetails = async () => {
     try {
       const response = await fetch(
@@ -32,9 +41,7 @@ const BookInfo = () => {
         `http://127.0.0.1:8000/api/bookshelves/mybooks/`, // Fetch the user's bookshelf
         {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
+          headers: headers,
         }
       );
       if (!response.ok) throw new Error("Failed to fetch bookshelf.");
@@ -56,9 +63,7 @@ const BookInfo = () => {
       // Check if the book already exists in the backend book model
       const checkBookResponse = await fetch("http://127.0.0.1:8000/api/book/", {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
+        headers: headers,
       });
 
       if (!checkBookResponse.ok) {
@@ -77,10 +82,7 @@ const BookInfo = () => {
       if (!isBookInModel) {
         const addBookResponse = await fetch("http://127.0.0.1:8000/api/book/", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
+          headers: headers,
           body: JSON.stringify({
             book_id: id,
             title: book.volumeInfo.title,
@@ -106,10 +108,7 @@ const BookInfo = () => {
         "http://127.0.0.1:8000/api/bookshelves/add-book/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
+          headers: headers,
           body: JSON.stringify({ book_id: id }),
         }
       );
@@ -138,10 +137,7 @@ const BookInfo = () => {
         "http://127.0.0.1:8000/api/bookshelves/remove-book/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
+          headers: headers,
           body: JSON.stringify({ book_id: id }),
         }
       );

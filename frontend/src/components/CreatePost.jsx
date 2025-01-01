@@ -7,7 +7,9 @@ const CreatePost = ({ clubId }) => {
   const [availableTags, setAvailableTags] = useState([]); // Store fetched tags
   const [error, setError] = useState(null);
 
-  const token = localStorage.getItem("access");
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
 
   // Fetch available tags from the API
   useEffect(() => {

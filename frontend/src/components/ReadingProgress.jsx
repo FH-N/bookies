@@ -10,7 +10,9 @@ const ReadingProgress = ({ bookId, totalPages }) => {
   const [isPercentage, setIsPercentage] = useState(false); // Toggle between page number and percentage
 
   // Get the token from localStorage
-  const token = localStorage.getItem("access");
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
 
   // Fetch user progress when the component mounts
   useEffect(() => {

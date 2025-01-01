@@ -103,14 +103,14 @@ class BookClubPost(models.Model):
 class ClubPost(models.Model): 
     club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='clubpost_posts')
     content = models.TextField()
-    likes = models.ManyToManyField(User, related_name='liked_club_posts', blank=True)
+    # likes = models.ManyToManyField(User, related_name='liked_club_posts', blank=True)
 
     def __str__(self):
         return f"Post in {self.club.name}"
     
-    @property
-    def total_likes(self):
-        return self.likes.count()
+    # @property
+    # def total_likes(self):
+    #     return self.likes.count()
 
 
 class Followings(models.Model):

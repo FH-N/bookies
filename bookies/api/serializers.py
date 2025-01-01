@@ -146,13 +146,13 @@ class BookClubPostSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
     created_at = serializers.ReadOnlyField()
     post_tags = PostTagSerializer(many=True, read_only=True)  # Add PostTagSerializer to include post tags
-    likes = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), many=True)  # Include likes
-    total_likes = serializers.ReadOnlyField()  # Add total likes as a read-only field
+    # likes = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), many=True)  # Include likes
+    # total_likes = serializers.ReadOnlyField()  # Add total likes as a read-only field
     replies = PostReplySerializer(many=True, read_only=True)  # Include replies using PostReplySerializer
 
     class Meta:
         model = BookClubPost
-        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags', 'likes', 'total_likes', 'replies']
+        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags',  'replies']
 
 
 class ReadingProgressSerializer(serializers.ModelSerializer):

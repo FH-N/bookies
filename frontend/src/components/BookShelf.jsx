@@ -8,6 +8,15 @@ const Bookshelf = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
+
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
   // Fetch books from the user's bookshelf
   const fetchBookshelf = async () => {
     try {
@@ -16,10 +25,7 @@ const Bookshelf = () => {
         "http://127.0.0.1:8000/api/bookshelves/mybooks/",
         {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access")}`, // Replace with your actual token handling
-          },
+          headers: headers, // Use the defined headers with the token
         }
       );
 
@@ -47,10 +53,7 @@ const Bookshelf = () => {
         "http://127.0.0.1:8000/api/bookshelves/remove-book/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
+          headers: headers, // Use the defined headers with the token
           body: JSON.stringify({ book_id: bookId }),
         }
       );

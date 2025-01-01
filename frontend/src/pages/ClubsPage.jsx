@@ -91,7 +91,9 @@ const BookClubList = () => {
   const handleJoinBookClub = (clubId, e) => {
     e.stopPropagation(); // Prevent the event from bubbling to the parent div
 
-    const token = localStorage.getItem("access");
+    const token =
+      localStorage.getItem("access") ||
+      localStorage.getItem("google_access_token");
 
     axios
       .post(
