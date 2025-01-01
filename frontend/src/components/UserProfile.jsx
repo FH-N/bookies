@@ -77,50 +77,66 @@ const UserProfile = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
+  if (loading)
+    return <div className="text-center text-gray-700">Loading...</div>;
+  if (error) return <div className="text-red-600 text-center">{error}</div>;
 
   return (
-    <div style={{ maxWidth: "400px", margin: "0 auto" }}>
-      <h2>Edit Profile</h2>
-      {success && <div style={{ color: "green" }}>{success}</div>}
-      <div>
-        <label>Username:</label>
+    <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        Edit Profile
+      </h2>
+      {success && <div className="text-green-600 mb-4">{success}</div>}
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-1">
+          Username:
+        </label>
         <input
           type="text"
           name="username"
           value={profile.username}
           onChange={handleChange}
           disabled
+          className="w-full border border-gray-300 rounded-lg p-2 bg-gray-100"
         />
       </div>
-      <div>
-        <label>Email:</label>
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-1">Email:</label>
         <input
           type="email"
           name="email"
           value={profile.email}
           onChange={handleChange}
+          disabled
+          className="w-full border border-gray-300 rounded-lg p-2"
         />
       </div>
-      <div>
-        <label>Role:</label>
-        <select name="role" value={profile.role} onChange={handleChange}>
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-1">Role:</label>
+        <select
+          name="role"
+          value={profile.role}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-2"
+        >
           <option value="User">User</option>
           <option value="Author">Author</option>
         </select>
       </div>
-      <div>
-        <label>Bio:</label>
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-1">Bio:</label>
         <textarea
           name="bio"
           value={profile.bio}
           onChange={handleChange}
           rows="4"
-          style={{ width: "100%" }}
+          className="w-full border border-gray-300 rounded-lg p-2"
         ></textarea>
       </div>
-      <button onClick={handleSave} style={{ marginTop: "10px" }}>
+      <button
+        onClick={handleSave}
+        className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700"
+      >
         Save
       </button>
     </div>
