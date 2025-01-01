@@ -52,5 +52,7 @@ urlpatterns = [
     path('bookshelves/remove-book/', BookshelfViewSet.as_view({'post': 'remove_book_from_bookshelf'}), name='remove-book-from-bookshelf'),  
     path('bookshelves/mybooks/', BookshelfViewSet.as_view({'get': 'retrieve_books'}), name='my-books'),
 
+    path("notifications/", get_notifications, name="get_notifications"),
+    
     path('', include(router.urls)),  
 ]

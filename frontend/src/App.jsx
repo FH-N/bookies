@@ -18,6 +18,7 @@ import MyFollowingsPage from "./pages/MyFollowings";
 import MyFollowersPage from "./pages/MyFollowersPage";
 import BookDetailsPage from "./pages/BookDetailsPage";
 import Bookshelf from "./components/BookShelf";
+import Notifications from "./components/Notifications";
 
 const App = () => {
   const { isAuthorized } = useAuthentication();
@@ -66,6 +67,7 @@ const App = () => {
           <Route path="/myfollowings" element={<MyFollowingsPage />} />
           <Route path="/myfollowers" element={<MyFollowersPage />} />
           <Route path="/library" element={<Bookshelf />} />
+          <Route path="/notification" element={<Notifications />} />
         </Routes>
       </div>
     </Router>
