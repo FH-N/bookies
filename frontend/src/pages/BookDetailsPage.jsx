@@ -8,7 +8,7 @@ const BookDetailsPage = () => {
   return (
     <div className="w-full h-full container">
       <BookInfo />
-      <ReviewList id={id} />
+      {/* <ReviewList id={id} /> */}
     </div>
   );
 };

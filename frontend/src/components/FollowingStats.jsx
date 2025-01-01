@@ -37,21 +37,21 @@ const FollowingStats = () => {
   }
 
   return (
-    <div style={{ textAlign: "center", marginTop: "20px" }}>
-      <h2>Following Stats</h2>
-      <p>
+    <div className="text-center mt-5">
+      <h2 className="text-2xl font-semibold mb-4">Following Stats</h2>
+      <p className="mb-2">
         <Link
           to="/allusers"
-          style={{ color: "blue", textDecoration: "underline" }}
+          className="text-blue-600 underline hover:text-blue-800 font-bold"
         >
-          <strong>All Users</strong>
+          All Users
         </Link>
       </p>
-      <p>
+      <p className="mb-2">
         <strong>Following:</strong>{" "}
         <Link
           to="/myfollowings"
-          style={{ color: "blue", textDecoration: "underline" }}
+          className="text-blue-600 underline hover:text-blue-800"
         >
           {stats.following_count}
         </Link>
@@ -60,7 +60,7 @@ const FollowingStats = () => {
         <strong>Followers:</strong>{" "}
         <Link
           to="/myfollowers"
-          style={{ color: "blue", textDecoration: "underline" }}
+          className="text-blue-600 underline hover:text-blue-800"
         >
           {stats.followers_count}
         </Link>

@@ -4,7 +4,7 @@ import FollowingStats from "../components/FollowingStats";
 
 const UserProfilePage = () => {
   return (
-    <div>
+    <div className="container min-h-screen w-full text-white">
       <FollowingStats />
       <h1>User Profile Page</h1>
       <UserProfile />

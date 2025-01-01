@@ -4,9 +4,6 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from .models import *
 import pdb
-import django
-
-django.setup()
 
 
 class UserCreateTestCase(TestCase):

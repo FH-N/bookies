@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { IconStarFilled } from "@tabler/icons-react";
 import Button from "./ui/Button";
 import ReadingProgress from "./ReadingProgress";
+import ReviewList from "./ReviewList";
 
 const BookInfo = () => {
   const { id } = useParams();
@@ -10,7 +11,8 @@ const BookInfo = () => {
   const [book, setBook] = useState(null);
   const [error, setError] = useState(null);
   const [rating, setRating] = useState(0); // State for the rating
-  const [isBookAdded, setIsBookAdded] = useState(false); // State to track if book is added
+  const [isBookAdded, setIsBookAdded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const token =
     localStorage.getItem("access") ||
@@ -60,7 +62,6 @@ const BookInfo = () => {
     if (!book) return;
 
     try {
-      // Check if the book already exists in the backend book model
       const checkBookResponse = await fetch("http://127.0.0.1:8000/api/book/", {
         method: "GET",
         headers: headers,
@@ -78,7 +79,6 @@ const BookInfo = () => {
         (existingBook) => existingBook.book_id === id
       );
 
-      // If the book is not in the book model, add it first
       if (!isBookInModel) {
         const addBookResponse = await fetch("http://127.0.0.1:8000/api/book/", {
           method: "POST",
@@ -103,7 +103,6 @@ const BookInfo = () => {
         }
       }
 
-      // Now, add the book to the user's bookshelf
       const addToBookshelfResponse = await fetch(
         "http://127.0.0.1:8000/api/bookshelves/add-book/",
         {
@@ -120,7 +119,7 @@ const BookInfo = () => {
         );
       }
 
-      setIsBookAdded(true); // Update the state to reflect the book was added
+      setIsBookAdded(true);
       alert("Book successfully added to your bookshelf!");
     } catch (error) {
       console.error(error.message);
@@ -132,7 +131,6 @@ const BookInfo = () => {
     if (!book) return;
 
     try {
-      // Remove the book from the user's bookshelf
       const removeBookResponse = await fetch(
         "http://127.0.0.1:8000/api/bookshelves/remove-book/",
         {
@@ -149,7 +147,7 @@ const BookInfo = () => {
         );
       }
 
-      setIsBookAdded(false); // Update the state to reflect the book was removed
+      setIsBookAdded(false);
       alert("Book successfully removed from your bookshelf!");
     } catch (error) {
       console.error(error.message);
@@ -193,8 +191,7 @@ const BookInfo = () => {
   };
 
   return (
-    <div className="container w-full min-h-screen mx-auto p-6 flex flex-row font-poppins">
-      {/* Image Section (Outside White Card) */}
+    <div className="container w-full min-h-screen mt-16 mx-auto p-6 flex flex-row font-poppin">
       <div className="flex-none w-[300px] h-[500px] mr-6">
         {imageLinks?.thumbnail ? (
           <img
@@ -208,6 +205,15 @@ const BookInfo = () => {
           </div>
         )}
         <Button
+          className="bg-electric-indigo w-full font-semibold mt-5 text-lg"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(book.infoLink, "_blank");
+          }}
+        >
+          Buy Book
+        </Button>
+        <Button
           className={`w-full font-semibold mt-5 text-lg ${
             isBookAdded ? "bg-pink-flower" : ""
           }`}
@@ -216,32 +222,27 @@ const BookInfo = () => {
           {isBookAdded ? "Remove Book" : "+ Add Book"}
         </Button>
 
-        <Button
-          className="dark:bg-pink-flower bg-light-purple w-full font-semibold mt-5 text-lg"
-          onClick={(e) => {
-            e.stopPropagation();
-            window.open(book.infoLink, "_blank");
-          }}
-        >
-          Buy Book
-        </Button>
-        <div className="flex flex-col items-center mt-5">
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <IconStarFilled
-                key={`blank-${index}`}
-                className="text-gray-300 cursor-pointer"
-                onClick={() => handleRatingClick(index + 1)}
-              />
-            ))}
-          </div>
-          <p className=" text-white">Rate this book</p>
-        </div>
-        <ReadingProgress bookId={book.id} totalPages={pageCount} />
+        {/* Conditionally render the "Edit Progress" button */}
+        {isBookAdded && (
+          <>
+            <Button
+              onClick={() => setIsEditing((prev) => !prev)}
+              className="w-full font-semibold mt-5 text-lg"
+            >
+              {isEditing ? "Cancel" : "Edit Progress"}
+            </Button>
+            <ReadingProgress
+              bookId={book.id}
+              totalPages={pageCount}
+              isEditing={isEditing}
+              setIsEditing={setIsEditing}
+            />
+          </>
+        )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-10 flex-1 h-fit">
-        <div className="flex flex-col justify-start">
+      <div className=" flex flex-col ">
+        <div className="bg-white rounded-lg shadow-lg p-10 flex flex-col justify-start h-full">
           <h2 className="text-3xl font-bold text-deep-purple py-1">{title}</h2>
           <p className="text-gray-600 text-xl py-1">
             By: {authors ? authors.join(", ") : "Unknown Author"}
@@ -272,6 +273,7 @@ const BookInfo = () => {
             Published: {publishedDate || "Unknown Date"}
           </p>
         </div>
+        <ReviewList id={id} />
       </div>
     </div>
   );
