@@ -39,6 +39,40 @@ const Bookshelf = () => {
     }
   };
 
+  // Remove the book from the user's bookshelf
+  const handleRemoveBook = async (bookId) => {
+    try {
+      // Remove the book from the user's bookshelf
+      const removeBookResponse = await fetch(
+        "http://127.0.0.1:8000/api/bookshelves/remove-book/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+          body: JSON.stringify({ book_id: bookId }),
+        }
+      );
+
+      if (!removeBookResponse.ok) {
+        const errorData = await removeBookResponse.json();
+        throw new Error(errorData.message || "Failed to remove the book.");
+      }
+
+      setBooks(books.filter((book) => book.book_id !== bookId)); // Remove book from local state
+      alert("Book successfully removed from your bookshelf!");
+    } catch (error) {
+      console.error(error.message);
+      setError(error.message || "An error occurred. Please try again.");
+    }
+  };
+
+  // Navigate to the BookInfo page for a specific book
+  const handleCardClick = (bookId) => {
+    navigate(`/book/${bookId}`);
+  };
+
   useEffect(() => {
     fetchBookshelf();
   }, []);
@@ -56,7 +90,11 @@ const Bookshelf = () => {
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {books.map((book) => (
-          <div key={book.book_id} className="bg-white rounded-lg shadow-lg p-4">
+          <div
+            key={book.book_id}
+            className="bg-white rounded-lg shadow-lg p-4 cursor-pointer"
+            onClick={() => handleCardClick(book.book_id)} // Navigate on card click
+          >
             <div className="flex flex-col items-center">
               {book.thumbnail ? (
                 <img
@@ -76,10 +114,13 @@ const Bookshelf = () => {
                 By: {book.author || "Unknown Author"}
               </p>
               <Button
-                className="mt-3 w-full"
-                onClick={() => navigate(`/books/${book.book_id}`)}
+                className="mt-3 w-full bg-pink-flower"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent card click from triggering
+                  handleRemoveBook(book.book_id); // Handle remove book
+                }}
               >
-                View Details
+                Remove Book
               </Button>
             </div>
           </div>

@@ -212,11 +212,14 @@ const BookInfo = () => {
           </div>
         )}
         <Button
-          className="w-full font-semibold mt-5 text-lg"
+          className={`w-full font-semibold mt-5 text-lg ${
+            isBookAdded ? "bg-pink-flower" : ""
+          }`}
           onClick={isBookAdded ? handleRemoveBook : handleAddBook}
         >
           {isBookAdded ? "Remove Book" : "+ Add Book"}
         </Button>
+
         <Button
           className="dark:bg-pink-flower bg-light-purple w-full font-semibold mt-5 text-lg"
           onClick={(e) => {
