@@ -5,7 +5,6 @@ import ReplyComponent from "./ReplyComponent";
 import StarRating from "./ui/Stars";
 
 const ReviewList = ({ id }) => {
-
   const [reviews, setReviews] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,6 +14,9 @@ const ReviewList = ({ id }) => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false); // Reply modal state
 
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
 
   const fetchReviews = async () => {
     try {
@@ -49,10 +51,15 @@ const ReviewList = ({ id }) => {
   const handleDeleteReview = async (reviewId) => {
     try {
       setLoading(true);
-      await axios.delete(`http://127.0.0.1:8000/api/reviews/${reviewId}/delete/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      });
-      setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewId));
+      await axios.delete(
+        `http://127.0.0.1:8000/api/reviews/${reviewId}/delete/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setReviews((prevReviews) =>
+        prevReviews.filter((review) => review.id !== reviewId)
+      );
       setMessage("Review deleted successfully!");
     } catch (error) {
       alert("Failed to delete review.", error);
@@ -68,11 +75,13 @@ const ReviewList = ({ id }) => {
       const response = await axios.put(
         `http://127.0.0.1:8000/api/reviews/${selectedReview.id}/update`,
         { content: updatedContent },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setReviews((prevReviews) =>
         prevReviews.map((review) =>
-          review.id === selectedReview.id ? { ...review, ...response.data } : review
+          review.id === selectedReview.id
+            ? { ...review, ...response.data }
+            : review
         )
       );
       setMessage("Review updated successfully!");
@@ -87,9 +96,12 @@ const ReviewList = ({ id }) => {
   const handleDeleteReply = async (reviewId, replyId) => {
     try {
       setLoading(true);
-      await axios.delete(`http://127.0.0.1:8000/api/reviews/reply/${replyId}/delete/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      });
+      await axios.delete(
+        `http://127.0.0.1:8000/api/reviews/reply/${replyId}/delete/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setReviews((prevReviews) =>
         prevReviews.map((review) =>
           review.id === reviewId
@@ -115,7 +127,7 @@ const ReviewList = ({ id }) => {
       await axios.put(
         `http://127.0.0.1:8000/api/reviews/reply/${selectedReply.id}/update/`,
         { content: updatedContent },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage("Reply updated successfully!");
       fetchReviews(); // Refetch reviews to get the updated replies
@@ -126,12 +138,12 @@ const ReviewList = ({ id }) => {
       setLoading(false);
     }
   };
-  
 
   const currentUserId = localStorage.getItem("user_id");
 
   const openEditModal = (review) => {
-    if (review.user_id !== parseInt(currentUserId)) { // Compare with the user_id from the API
+    if (review.user_id !== parseInt(currentUserId)) {
+      // Compare with the user_id from the API
       alert("You cannot edit this review because you are not the author.");
       return;
     }
@@ -140,7 +152,8 @@ const ReviewList = ({ id }) => {
   };
 
   const openEditReplyModal = (review, reply) => {
-    if (reply.user_id !== parseInt(currentUserId)) { // Compare with the user_id from the API
+    if (reply.user_id !== parseInt(currentUserId)) {
+      // Compare with the user_id from the API
       alert("You cannot edit this reply because you are not the author.");
       return;
     }
@@ -155,7 +168,7 @@ const ReviewList = ({ id }) => {
       const response = await axios({
         url,
         method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setReviews((prevReviews) =>
@@ -163,8 +176,9 @@ const ReviewList = ({ id }) => {
           review.id === reviewId
             ? {
                 ...review,
-                likes_count: response.data.likes , // Increment like count by 1
-                dislikes_count: review.dislikes_count > 0 ? review.dislikes_count - 1 : 0, // Decrement dislike if it was present
+                likes_count: response.data.likes, // Increment like count by 1
+                dislikes_count:
+                  review.dislikes_count > 0 ? review.dislikes_count - 1 : 0, // Decrement dislike if it was present
               }
             : review
         )
@@ -181,7 +195,7 @@ const ReviewList = ({ id }) => {
       const response = await axios({
         url,
         method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setReviews((prevReviews) =>
@@ -190,7 +204,8 @@ const ReviewList = ({ id }) => {
             ? {
                 ...review,
                 dislikes_count: response.data.dislikes, // Increment dislike count by 1
-                likes_count: review.likes_count > 0 ? review.likes_count - 1 : 0, // Decrement like if it was present
+                likes_count:
+                  review.likes_count > 0 ? review.likes_count - 1 : 0, // Decrement like if it was present
               }
             : review
         )
@@ -207,7 +222,7 @@ const ReviewList = ({ id }) => {
       const response = await axios({
         url,
         method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setReviews((prevReviews) =>
@@ -215,7 +230,8 @@ const ReviewList = ({ id }) => {
           review.id === reviewId
             ? {
                 ...review,
-                likes_count: review.likes_count > 0 ? review.likes_count - 1 : 0, // Decrement like count by 1
+                likes_count:
+                  review.likes_count > 0 ? review.likes_count - 1 : 0, // Decrement like count by 1
               }
             : review
         )
@@ -232,7 +248,7 @@ const ReviewList = ({ id }) => {
       const response = await axios({
         url,
         method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setReviews((prevReviews) =>
@@ -240,7 +256,8 @@ const ReviewList = ({ id }) => {
           review.id === reviewId
             ? {
                 ...review,
-                dislikes_count: review.dislikes_count > 0 ? review.dislikes_count - 1 : 0, // Decrement dislike count by 1
+                dislikes_count:
+                  review.dislikes_count > 0 ? review.dislikes_count - 1 : 0, // Decrement dislike count by 1
               }
             : review
         )
@@ -260,172 +277,191 @@ const ReviewList = ({ id }) => {
   };
 
   return (
-    
     <div className="mt-8">
       {/* Reviews Section */}
-    <div className="mt-8">
-    <h3 className="text-lg font-semibold mb-4">Reviews:</h3>
-    {Array.isArray(reviews) && reviews.length > 0 ? (
-      reviews.map((review) => (
-        <div key={review.id} className="p-4 border rounded-lg bg-gray-100 mb-4">
-          <p>
-            <strong>{review.user || "Anonymous"}</strong> 
-          </p>
-          <p>{review.content}</p>
-          <p className="text-sm text-gray-500">Rating:{<StarRating rating={review.rating}/>}</p>
-          <p className="text-sm text-gray-500">
-            {new Date(review.created_at).toLocaleString()}
-          </p>
-          <div className="flex items-center gap-4 mt-2">
-            <button
-              onClick={() => openEditModal(review)}
-              className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-4">Reviews:</h3>
+        {Array.isArray(reviews) && reviews.length > 0 ? (
+          reviews.map((review) => (
+            <div
+              key={review.id}
+              className="p-4 border rounded-lg bg-gray-100 mb-4"
             >
-              ✏️ Edit
-            </button>
-            <button
-              onClick={() => handleDeleteReview(review.id)}
-              className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
-            >
-              🗑️ Delete
-            </button>
-            <button
-              onClick={() =>
-                isLiked(review) ? handleRemoveLike(review.id) : handleLike(review.id)
-              }
-              className={`${
-                isLiked(review) ? "bg-blue-700" : "bg-blue-500"
-              } hover:bg-blue-700 text-white px-2 py-1 rounded`}
-            >
-              {isLiked(review) ? `👍 Like (${review.likes_count })` : `👍 Like (${review.likes_count || 0})`}
-            </button>
-            <button
-              onClick={() =>
-                isDisliked(review)
-                  ? handleRemoveDislike(review.id)
-                  : handleDisLike(review.id)
-              }
-              className={`${
-                isDisliked(review) ? "bg-red-700" : "bg-red-500"
-              } hover:bg-red-700 text-white px-2 py-1 rounded`}
-            >
-              {isDisliked(review)
-                ? `👎 Dislike (${review.dislikes_count })`
-                : `👎 Dislike (${review.dislikes_count || 0})`}
-            </button>
-          </div>
-          {/* Replies */}
-          <div className="ml-4 pl-4 border-l mt-4">
-            <h4 className="text-md font-semibold">Replies:</h4>
-            {review.replies && review.replies.length > 0 ? (
-              review.replies.map((reply) => (
-                <div key={reply.id} className="p-2 border rounded bg-gray-50 mt-2">
-                  <p>
-                    <strong>{reply.user || "Anonymous"}</strong>: {reply.content}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(reply.created_at).toLocaleString()}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <button
-                      onClick={() => openEditReplyModal(review, reply)}
-                      className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+              <p>
+                <strong>{review.user || "Anonymous"}</strong>
+              </p>
+              <p>{review.content}</p>
+              <p className="text-sm text-gray-500">
+                Rating:{<StarRating rating={review.rating} />}
+              </p>
+              <p className="text-sm text-gray-500">
+                {new Date(review.created_at).toLocaleString()}
+              </p>
+              <div className="flex items-center gap-4 mt-2">
+                <button
+                  onClick={() => openEditModal(review)}
+                  className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteReview(review.id)}
+                  className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
+                >
+                  🗑️ Delete
+                </button>
+                <button
+                  onClick={() =>
+                    isLiked(review)
+                      ? handleRemoveLike(review.id)
+                      : handleLike(review.id)
+                  }
+                  className={`${
+                    isLiked(review) ? "bg-blue-700" : "bg-blue-500"
+                  } hover:bg-blue-700 text-white px-2 py-1 rounded`}
+                >
+                  {isLiked(review)
+                    ? `👍 Like (${review.likes_count})`
+                    : `👍 Like (${review.likes_count || 0})`}
+                </button>
+                <button
+                  onClick={() =>
+                    isDisliked(review)
+                      ? handleRemoveDislike(review.id)
+                      : handleDisLike(review.id)
+                  }
+                  className={`${
+                    isDisliked(review) ? "bg-red-700" : "bg-red-500"
+                  } hover:bg-red-700 text-white px-2 py-1 rounded`}
+                >
+                  {isDisliked(review)
+                    ? `👎 Dislike (${review.dislikes_count})`
+                    : `👎 Dislike (${review.dislikes_count || 0})`}
+                </button>
+              </div>
+              {/* Replies */}
+              <div className="ml-4 pl-4 border-l mt-4">
+                <h4 className="text-md font-semibold">Replies:</h4>
+                {review.replies && review.replies.length > 0 ? (
+                  review.replies.map((reply) => (
+                    <div
+                      key={reply.id}
+                      className="p-2 border rounded bg-gray-50 mt-2"
                     >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteReply(review.id, reply.id)}
-                      className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-600">No replies yet.</p>
-            )}
-            {/* Add Reply */}
-            <ReplyComponent
-              reviewId={review.id}
-              onReplyAdded={(newReply) => handleReplyAdded(review.id, newReply)}
+                      <p>
+                        <strong>{reply.user || "Anonymous"}</strong>:{" "}
+                        {reply.content}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(reply.created_at).toLocaleString()}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <button
+                          onClick={() => openEditReplyModal(review, reply)}
+                          className="bg-yellow-500 hover:bg-yellow-700 text-white px-2 py-1 rounded"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReply(review.id, reply.id)}
+                          className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600">No replies yet.</p>
+                )}
+                {/* Add Reply */}
+                <ReplyComponent
+                  reviewId={review.id}
+                  onReplyAdded={(newReply) =>
+                    handleReplyAdded(review.id, newReply)
+                  }
+                />
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No reviews yet. Be the first to review!</p>
+        )}
+      </div>
+
+      {/* Add Review Section */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-4">Add a Review</h3>
+        <ReviewForm googleBooksId={id} onReviewAdded={handleReviewAdded} />
+      </div>
+
+      {/* Modal for Editing Review */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Review</h3>
+            <textarea
+              defaultValue={selectedReview.content}
+              rows="4"
+              className="w-full border p-2 rounded"
+              onChange={(e) =>
+                setSelectedReview({
+                  ...selectedReview,
+                  content: e.target.value,
+                })
+              }
             />
+            <div className="flex items-center justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUpdateReview(selectedReview.content)}
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
-      ))
-    ) : (
-      <p>No reviews yet. Be the first to review!</p>
-    )}
-  </div>
+      )}
 
-  {/* Add Review Section */}
-  <div className="mt-8">
-    <h3 className="text-lg font-semibold mb-4">Add a Review</h3>
-    <ReviewForm googleBooksId={id} onReviewAdded={handleReviewAdded} />
-  </div>
-
-  {/* Modal for Editing Review */}
-  {isModalOpen && (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-        <h3 className="text-lg font-semibold mb-4">Edit Review</h3>
-        <textarea
-          defaultValue={selectedReview.content}
-          rows="4"
-          className="w-full border p-2 rounded"
-          onChange={(e) =>
-            setSelectedReview({ ...selectedReview, content: e.target.value })
-          }
-        />
-        <div className="flex items-center justify-end gap-4 mt-4">
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => handleUpdateReview(selectedReview.content)}
-            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            Save
-          </button>
+      {/* Modal for Editing Reply */}
+      {isReplyModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Reply</h3>
+            <textarea
+              defaultValue={selectedReply.content}
+              rows="4"
+              className="w-full border p-2 rounded"
+              onChange={(e) =>
+                setSelectedReply({ ...selectedReply, content: e.target.value })
+              }
+            />
+            <div className="flex items-center justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsReplyModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() =>
+                  handleUpdateReply(selectedReply.review, selectedReply.content)
+                }
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
-  )}
-
-  {/* Modal for Editing Reply */}
-  {isReplyModalOpen && (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-        <h3 className="text-lg font-semibold mb-4">Edit Reply</h3>
-        <textarea
-          defaultValue={selectedReply.content}
-          rows="4"
-          className="w-full border p-2 rounded"
-          onChange={(e) =>
-            setSelectedReply({ ...selectedReply, content: e.target.value })
-          }
-        />
-        <div className="flex items-center justify-end gap-4 mt-4">
-          <button
-            onClick={() => setIsReplyModalOpen(false)}
-            className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => handleUpdateReply(selectedReply.review, selectedReply.content)}
-            className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
-  </div>
   );
 };
 

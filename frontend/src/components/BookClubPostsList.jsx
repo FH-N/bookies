@@ -10,7 +10,9 @@ const BookClubPostsList = ({ clubId }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true); // Add loading state
 
-  const token = localStorage.getItem("access");
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
 
   const fetchPosts = () => {
     setLoading(true); // Set loading to true before fetching

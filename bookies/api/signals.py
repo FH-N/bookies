@@ -1,25 +1,38 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import UserProfile,Bookshelf
+from allauth.socialaccount.models import SocialAccount
+from .models import UserProfile, Bookshelf
 
+# Signal to handle User creation and Social Account login
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_user_related_objects(sender, instance, created, **kwargs):
     """
-    Automatically create a UserProfile when a User is created.
+    Automatically create UserProfile and Bookshelf when a User is created.
+    This handles both regular User creation and Google login.
     """
     if created:
+        # Create UserProfile
         UserProfile.objects.create(user=instance)
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """
-    Automatically save the UserProfile when the User is saved.
-    """
-    instance.profile.save()
-
-@receiver(post_save, sender=User)
-def create_user_profile_bookshelf(sender, instance, created, **kwargs):
-    if created:
+        # Create Bookshelf
         Bookshelf.objects.create(user=instance)
-        
+
+    # Always save the UserProfile (for regular or Google logins)
+    if instance.profile:
+        instance.profile.save()
+
+# Signal to handle Google login and UserProfile creation
+@receiver(post_save, sender=SocialAccount)
+def create_user_profile_for_google(sender, instance, created, **kwargs):
+    """
+    Create a UserProfile and Bookshelf when a User logs in via Google.
+    """
+    if created:
+        # Check if the social account is for Google login
+        if instance.provider == "google":
+            user = instance.user
+            # Create related objects (UserProfile and Bookshelf)
+            UserProfile.objects.get_or_create(user=user)
+            Bookshelf.objects.get_or_create(user=user)
+

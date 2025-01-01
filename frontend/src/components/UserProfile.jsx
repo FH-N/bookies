@@ -12,46 +12,49 @@ const UserProfile = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [user, setUser] = useState(null);
-  const [userid, setUserid] = useState('');
-  
-    function decodeToken(token) {
-        const payloadBase64 = token.split('.')[1]; // Extract the payload part
-        const decodedPayload = atob(payloadBase64); // Decode Base64 string
-        return JSON.parse(decodedPayload); // Parse JSON payload
+  const [userid, setUserid] = useState("");
+
+  function decodeToken(token) {
+    const payloadBase64 = token.split(".")[1]; // Extract the payload part
+    const decodedPayload = atob(payloadBase64); // Decode Base64 string
+    return JSON.parse(decodedPayload); // Parse JSON payload
+  }
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("access");
+    if (accessToken) {
+      const decodedToken = decodeToken(accessToken);
+      if (decodedToken) {
+        setUserid(decodedToken.user_id); // Adjust to match token payload
+      }
+    } else {
+      setError("No access token found.");
     }
+  }, []);
 
-    useEffect(() => {
-        const accessToken = localStorage.getItem("access");
-        if (accessToken) {
-            const decodedToken = decodeToken(accessToken);
-            if (decodedToken) {
-                setUserid(decodedToken.user_id); // Adjust to match token payload
-            }
-        } else {
-            setError("No access token found.");
+  useEffect(() => {
+    if (userid) {
+      const fetchProfile = async () => {
+        try {
+          setLoading(true);
+          const response = await axios.get(
+            `http://localhost:8000/api/user/?user_id=${userid}`
+          );
+          if (response && response.data) {
+            setProfile(response.data);
+          } else {
+            setError("User profile data is missing.");
+          }
+        } catch (err) {
+          setError("Failed to load user profile.");
+        } finally {
+          setLoading(false);
         }
-    }, []);
- 
+      };
 
-
-
-    useEffect(() => {
-        if (userid) {
-            const fetchProfile = async () => {
-                try {
-                    setLoading(true);
-                    const response = await axios.get(`http://localhost:8000/api/user/?user_id=${userid}`);
-                    setProfile(response.data);
-                } catch (err) {
-                    setError("Failed to load user profile.");
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchProfile();
-        }
-    }, [userid]);
+      fetchProfile();
+    }
+  }, [userid]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -61,17 +64,15 @@ const UserProfile = () => {
 
   // Handle form submission (save profile)
   const handleSave = async () => {
-
-    var res;
     try {
       setSuccess(false);
       setError(null);
-      console.log(profile);
-      res =  await axios.post("http://localhost:8000/api/update-user/", profile);
-      console.log(profile);
+      const res = await axios.post(
+        "http://localhost:8000/api/update-user/",
+        profile
+      );
       setSuccess("Profile updated successfully.");
     } catch (err) {
-        console.log(res);
       setError("Failed to update profile.");
     }
   };
@@ -104,11 +105,7 @@ const UserProfile = () => {
       </div>
       <div>
         <label>Role:</label>
-        <select
-          name="role"
-          value={profile.role}
-          onChange={handleChange}
-        >
+        <select name="role" value={profile.role} onChange={handleChange}>
           <option value="User">User</option>
           <option value="Author">Author</option>
         </select>

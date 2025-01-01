@@ -9,10 +9,14 @@ const ReviewForm = ({ googleBooksId, onReviewAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const token =
+      localStorage.getItem("access") ||
+      localStorage.getItem("google_access_token");
+
     try {
-      const reviewData = { 
-        google_books_id: googleBooksId, 
-        rating 
+      const reviewData = {
+        google_books_id: googleBooksId,
+        rating,
       };
 
       // Include content only if it is not empty
@@ -24,7 +28,7 @@ const ReviewForm = ({ googleBooksId, onReviewAdded }) => {
         `http://127.0.0.1:8000/api/reviews/create/`,
         reviewData,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setContent("");
@@ -39,7 +43,11 @@ const ReviewForm = ({ googleBooksId, onReviewAdded }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block font-semibold">Rating:</label>
-        <StarRating rating={rating} onRatingChange={setRating} editable={true} />
+        <StarRating
+          rating={rating}
+          onRatingChange={setRating}
+          editable={true}
+        />
       </div>
       <div>
         <label className="block font-semibold">Content (Optional):</label>
