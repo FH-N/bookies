@@ -1,8 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import *
+#from .views import create_book, add_book_to_bookshelf
 router = DefaultRouter()
-
+router.register(r'book', BookViewSet)
+router.register(r'bookshelves', BookshelfViewSet)
 
 urlpatterns = [
     path('books/', BookReviewsView.as_view(), name='book-list'), 
@@ -44,6 +46,5 @@ urlpatterns = [
     path('reviews/<int:review_id>/dislike/delete', DeleteReviewDisLike.as_view(), name="delete-dislike"),
     path('progress/update/', UpdateProgressView.as_view(), name='update-progress'),
     path('progress/user/', UserProgressView.as_view(), name='user-progress'),
-
     path('', include(router.urls)),  
 ]

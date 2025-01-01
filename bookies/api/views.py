@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 
 # Third-party imports
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework import generics, status
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
@@ -1125,3 +1125,95 @@ class UserProgressView(APIView):
             progress_data.append(serializer.data)
 
         return Response(progress_data, status=status.HTTP_200_OK)
+
+
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
+from .models import Book
+import json
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+from django.http import JsonResponse, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from .models import Book
+import json
+from rest_framework import viewsets
+from .models import Book
+from .serializers import BookSerializer, AddBookSerializer
+
+###Book serializer to add book and used to retirve books from user bookshelf
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    
+    @action(detail=False, methods=['get'], url_path='all-books', permission_classes=[AllowAny])
+    def get_books(self, request):
+        # Retrieve all books
+        books = Book.objects.all()
+
+        # Serialize the books
+        data = [
+            {
+                'book_id': book.book_id,
+                'title': book.title,
+                'author': book.author,
+                'description': book.description,
+                'thumbnail': book.thumbnail if book.thumbnail else None,
+            } for book in books
+        ]
+
+        # Return the serialized data as a JSON response
+        return Response(data)
+
+from .models import Book, Bookshelf
+
+class BookshelfViewSet(viewsets.ModelViewSet):
+    queryset = Bookshelf.objects.all()
+    serializer_class = BookshelfSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['post'], url_path='add-book')
+    def add_book_to_bookshelf(self, request,pk=None):    
+        logger.debug("Received request to add book to bookshelf")
+        logger.debug(f"Request data: {request.data}")
+        logger.debug(f"Request user: {request.user}")
+        serializer = AddBookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book_id = serializer.validated_data['book_id']
+        user = request.user
+
+    # Get the book object
+        book = get_object_or_404(Book, book_id=book_id)
+
+    # Get or create the user's bookshelf
+        bookshelf, created = Bookshelf.objects.get_or_create(user=user)
+
+    # Add the book to the bookshelf
+        bookshelf.books.add(book)
+
+    # Return success response
+        return Response({'message': 'Book added to bookshelf successfully'}, status=201)
+    
+
+    @action(detail=True, methods=['get'], url_path='mybooks')
+    def retrieve_books(self, request, pk=None):
+        try:
+            # Get the bookshelf for the logged-in user
+            bookshelf = get_object_or_404(Bookshelf.objects.filter(user=request.user))
+
+            # Get all books in the bookshelf
+            books = bookshelf.books.all()
+
+            # Serialize the books using BookSerializer
+            serialized_books = BookSerializer(books, many=True)
+
+            # Return the serialized book data
+            return Response(serialized_books.data, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)

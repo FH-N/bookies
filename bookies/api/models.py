@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 
 class Review(models.Model):
@@ -147,3 +148,22 @@ class PostReply(models.Model):
 
     def __str__(self):
         return f"Reply by {self.author.username} on post {self.post if self.post else self.club_post}"
+
+class Book(models.Model):
+    book_id = models.CharField(max_length=50, primary_key=True)
+    title = models.CharField(max_length=255)
+    author = models.CharField(max_length=255)
+    description = models.TextField()
+    thumbnail = models.URLField(max_length=200)
+    
+    def __str__(self):
+        return self.title
+    
+
+class Bookshelf(models.Model):
+    bookshelf_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='bookshelf')
+    books = models.ManyToManyField(Book, related_name='bookshelves', blank=True)
+
+    def __str__(self):
+        return f"Bookshelf {self.bookshelf_id} of {self.user.username}"

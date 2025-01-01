@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
+from .models import Book, Bookshelf
 from .models import (
     UserProfile,
     Review, 
@@ -78,3 +79,18 @@ admin.site.register(PostReply, PostReplyAdmin)
 # Unregister the default User admin and register the custom one
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
+
+
+
+# Register the Book model
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'book_id')
+    search_fields = ('title', 'author')
+
+# Register the Bookshelf model
+@admin.register(Bookshelf)
+class BookshelfAdmin(admin.ModelAdmin):
+    list_display = ('bookshelf_id', 'user')
+    search_fields = ('user__username',)
+    filter_horizontal = ('books',)
