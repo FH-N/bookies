@@ -2,7 +2,12 @@ import requests
 from django.http import JsonResponse, request, QueryDict
 from django.views.decorators.http import require_POST
 from bookies.utlis import search_books_by_category
-from .credentials import GOOGLE_BOOKS_API_KEY, CLIENT_SECRET, CLIENT_ID
+from decouple import config
+
+GOOGLE_BOOKS_API_KEY = config("GOOGLE_BOOKS_API_KEY")
+CLIENT_ID = config("CLIENT_ID")
+CLIENT_SECRET = config("CLIENT_SECRET")
+
 
 def search_books(request):
     search_query = request.GET.get("search", "")

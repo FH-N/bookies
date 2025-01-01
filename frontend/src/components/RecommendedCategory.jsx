@@ -16,13 +16,23 @@ const RecommendedCategory = ({ searchTerm }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Search by category (i.e., searchTerm) directly
         const response = await axios.get(
-          `https://www.googleapis.com/books/v1/volumes?q=${searchTerm}`
+          `https://www.googleapis.com/books/v1/volumes?q=subject:${searchTerm}`
         );
-        setSearchResults(response.data.items || []);
+        const books = response.data.items || [];
+
+        // Sort the books by averageRating in descending order
+        const sortedBooks = books.sort((a, b) => {
+          const ratingA = a.volumeInfo.averageRating || 0;
+          const ratingB = b.volumeInfo.averageRating || 0;
+          return ratingB - ratingA; // Sort by highest rating
+        });
+
+        setSearchResults(sortedBooks);
       } catch (error) {
         console.error(
-          `Error fetching results for term '${searchTerm}':`,
+          `Error fetching results for category '${searchTerm}':`,
           error
         );
       }
@@ -38,11 +48,11 @@ const RecommendedCategory = ({ searchTerm }) => {
       if (containerWidth) {
         // Adjust number of columns based on container width
         if (containerWidth >= 1200) {
-          setColumns(6); // Large container, 4 cards per row
+          setColumns(6); // Large container, 6 cards per row
         } else if (containerWidth >= 900) {
-          setColumns(4); // Medium container, 3 cards per row
+          setColumns(4); // Medium container, 4 cards per row
         } else if (containerWidth >= 600) {
-          setColumns(3); // Small container, 2 cards per row
+          setColumns(3); // Small container, 3 cards per row
         } else {
           setColumns(1); // Very small container, 1 card per row
         }
