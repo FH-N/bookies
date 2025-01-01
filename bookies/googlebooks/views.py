@@ -1,5 +1,5 @@
 import requests
-from django.http import JsonResponse, request, QueryDict
+from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from bookies.utlis import search_books_by_category
 from decouple import config

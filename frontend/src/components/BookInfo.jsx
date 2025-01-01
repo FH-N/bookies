@@ -10,6 +10,7 @@ const BookInfo = () => {
   const [book, setBook] = useState(null);
   const [error, setError] = useState(null);
   const [rating, setRating] = useState(0); // State for the rating
+  const [isBookAdded, setIsBookAdded] = useState(false); // State to track if book is added
 
   const fetchBookDetails = async () => {
     try {
@@ -19,94 +20,146 @@ const BookInfo = () => {
       if (!response.ok) throw new Error("Failed to fetch book details.");
       const data = await response.json();
       setBook(data);
+      checkIfBookAdded(data.id); // Check if the book is already in the bookshelf
     } catch (err) {
       setError("Could not fetch book details. Please try again later.");
     }
   };
 
-  async function refreshToken() {
+  const checkIfBookAdded = async (bookId) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh: refreshToken })
-      });
-  
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access);
-        return data.access;
-      } else {
-        console.error('Failed to refresh token:', response.status);
-        const errorData = await response.json();
-        console.error('Error details:', errorData);
-        // Handle refresh token errors
-        alert('Session expired. Please log in again.');
-        //window.location.href = '/login'; // Redirect to login page
-      }
-    } catch (err) {
-      console.error('Error refreshing token:', err);
-      alert('An error occurred while refreshing the token. Please try again.');
-    }
-  }
-  
-  async function handleAddBook() {
-    if (!book) {
-      alert("Book details are not available.");
-      return;
-    }
-  
-    const bookDetails = {
-      book_id: id,
-      title: book.volumeInfo.title,
-      author: book.volumeInfo.authors ? book.volumeInfo.authors.join(", ") : "Unknown Author",
-      description: book.volumeInfo.description || "No description available.",
-      thumbnail: book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : null,
-    };
-  
-    let token = localStorage.getItem('token');
-  
-    try {
-      let response = await fetch('http://127.0.0.1:8000/api/bookshelves/add-book/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(bookDetails)
-      });
-  
-      if (response.status === 401) { // Unauthorized, possibly due to invalid/expired token
-        token = await refreshToken();
-        response = await fetch('http://127.0.0.1:8000/api/bookshelves/add-book/', {
-          method: 'POST',
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/bookshelves/mybooks/`, // Fetch the user's bookshelf
+        {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
           },
-          body: JSON.stringify(bookDetails)
-        });
-      }
-  
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
-          const data = await response.json();
-          alert(data.message || 'Book added to bookshelf successfully!');
-        } else {
-          alert('Book added to bookshelf successfully!');
         }
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to add book: ${errorData.message}`);
-      }
-    } catch (err) {
-      console.error('Error adding book:', err);
-      alert('An error occurred while adding the book. Please try again.');
+      );
+      if (!response.ok) throw new Error("Failed to fetch bookshelf.");
+      const data = await response.json();
+      const bookExists = data.some((book) => book.book_id === bookId);
+      setIsBookAdded(bookExists); // Set the state if the book is already added
+    } catch (error) {
+      console.error(error.message);
+      setError(
+        "An error occurred while checking if the book is in your bookshelf."
+      );
     }
-  }
+  };
+
+  const handleAddBook = async () => {
+    if (!book) return;
+
+    try {
+      // Check if the book already exists in the backend book model
+      const checkBookResponse = await fetch("http://127.0.0.1:8000/api/book/", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
+        },
+      });
+
+      if (!checkBookResponse.ok) {
+        const errorData = await checkBookResponse.json();
+        throw new Error(
+          errorData.message || "Failed to check the book in the backend."
+        );
+      }
+
+      const existingBooks = await checkBookResponse.json();
+      const isBookInModel = existingBooks.some(
+        (existingBook) => existingBook.book_id === id
+      );
+
+      // If the book is not in the book model, add it first
+      if (!isBookInModel) {
+        const addBookResponse = await fetch("http://127.0.0.1:8000/api/book/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+          body: JSON.stringify({
+            book_id: id,
+            title: book.volumeInfo.title,
+            author: book.volumeInfo.authors
+              ? book.volumeInfo.authors.join(", ")
+              : "Unknown",
+            description:
+              book.volumeInfo.description || "No description available.",
+            thumbnail: book.volumeInfo.imageLinks?.thumbnail || null,
+          }),
+        });
+
+        if (!addBookResponse.ok) {
+          const errorData = await addBookResponse.json();
+          throw new Error(
+            errorData.message || "Failed to add the book to the backend."
+          );
+        }
+      }
+
+      // Now, add the book to the user's bookshelf
+      const addToBookshelfResponse = await fetch(
+        "http://127.0.0.1:8000/api/bookshelves/add-book/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+          body: JSON.stringify({ book_id: id }),
+        }
+      );
+
+      if (!addToBookshelfResponse.ok) {
+        const errorData = await addToBookshelfResponse.json();
+        throw new Error(
+          errorData.message || "Failed to add the book to the user's bookshelf."
+        );
+      }
+
+      setIsBookAdded(true); // Update the state to reflect the book was added
+      alert("Book successfully added to your bookshelf!");
+    } catch (error) {
+      console.error(error.message);
+      setError(error.message || "An error occurred. Please try again.");
+    }
+  };
+
+  const handleRemoveBook = async () => {
+    if (!book) return;
+
+    try {
+      // Remove the book from the user's bookshelf
+      const removeBookResponse = await fetch(
+        "http://127.0.0.1:8000/api/bookshelves/remove-book/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+          },
+          body: JSON.stringify({ book_id: id }),
+        }
+      );
+
+      if (!removeBookResponse.ok) {
+        const errorData = await removeBookResponse.json();
+        throw new Error(
+          errorData.message || "Failed to remove the book from the bookshelf."
+        );
+      }
+
+      setIsBookAdded(false); // Update the state to reflect the book was removed
+      alert("Book successfully removed from your bookshelf!");
+    } catch (error) {
+      console.error(error.message);
+      setError(error.message || "An error occurred. Please try again.");
+    }
+  };
 
   useEffect(() => {
     fetchBookDetails();
@@ -158,12 +211,15 @@ const BookInfo = () => {
             <span className="text-gray-500">No Image Available</span>
           </div>
         )}
-        <Button 
-          className="w-full font-semibold mt-5 text-lg"
-          onClick={handleAddBook}
+        <Button
+          className={`w-full font-semibold mt-5 text-lg ${
+            isBookAdded ? "bg-pink-flower" : ""
+          }`}
+          onClick={isBookAdded ? handleRemoveBook : handleAddBook}
         >
-          + Add Book
+          {isBookAdded ? "Remove Book" : "+ Add Book"}
         </Button>
+
         <Button
           className="dark:bg-pink-flower bg-light-purple w-full font-semibold mt-5 text-lg"
           onClick={(e) => {
