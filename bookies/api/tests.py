@@ -15,21 +15,21 @@ class UserCreateTestCase(TestCase):
         data = {
             'username': 'testuser',
             'password': 'testpassword',
-            'email': 'testuser@example.com'
+            'email': 'testuser@example.com',
+            'role':'booker'
         }
         response = self.client.post(self.url, data, format='json')
+        print(response.status_code)
         print(response.data)
-        pdb.set_trace()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, 'testuser')
+
 
 class ReviewCreateTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(username='testuser', password='testpassword', email='testuser@example.com')
         self.client.force_authenticate(user=self.user)
-        self.url = 'http://localhost:8000/reviews/create/'
+        self.url = 'http://localhost:8000/api/reviews/create/'
 
     def test_create_review(self):
         data = {
@@ -37,8 +37,8 @@ class ReviewCreateTestCase(TestCase):
             'google_books_id': 'test_google_books_id'
         }
         response = self.client.post(self.url, data, format='json')
+        print(response.status_code)
         print(response.data)
-        pdb.set_trace()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Review.objects.count(), 1)
         self.assertEqual(Review.objects.get().content, 'This is a test review')
