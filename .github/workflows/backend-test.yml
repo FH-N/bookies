@@ -9,21 +9,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -37,11 +22,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r bookies/requirements.txt  
+
       - name: Run tests
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: sqlite:///db.sqlite3  # Use SQLite for local testing
+          GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
-          cd bookies  # Navigate to the 'bookies' folder where your Django app is
+          cd bookies 
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov=bookies  # Adjust the coverage target if necessary
+          pytest --cov=api api/tests.py
