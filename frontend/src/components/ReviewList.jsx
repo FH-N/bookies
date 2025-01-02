@@ -94,6 +94,7 @@ const ReviewList = ({ id }) => {
         prevReviews.filter((review) => review.id !== reviewId)
       );
       setMessage("Review deleted successfully!");
+      fetchReviews();
     } catch (error) {
       alert("Failed to delete review.", error);
     } finally {
@@ -119,6 +120,7 @@ const ReviewList = ({ id }) => {
       );
       setMessage("Review updated successfully!");
       setIsModalOpen(false);
+      fetchReviews();
     } catch (error) {
       setMessage("Failed to update review.");
     } finally {
