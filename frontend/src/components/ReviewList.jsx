@@ -21,10 +21,35 @@ const ReviewList = ({ id }) => {
   const [selectedReply, setSelectedReply] = useState(null); // For editing replies
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false); // Reply modal state
+  const [currentUserData, setCurrentUserData] = useState(null);
 
   const token =
     localStorage.getItem("access") ||
     localStorage.getItem("google_access_token");
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/auth/user/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch current user");
+        }
+
+        const userData = await response.json();
+        setCurrentUserData(userData);
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+        alert("Failed to load user data. Please refresh the page.");
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const fetchReviews = async () => {
     try {
@@ -147,24 +172,32 @@ const ReviewList = ({ id }) => {
     }
   };
 
-  const currentUserId = localStorage.getItem("user_id");
-
   const openEditModal = (review) => {
-    if (review.user_id !== parseInt(currentUserId)) {
-      // Compare with the user_id from the API
+    if (!currentUserData) {
+      alert("User data is not available. Please try again.");
+      return;
+    }
+
+    if (review.user_id !== currentUserData.id) {
       alert("You cannot edit this review because you are not the author.");
       return;
     }
+
     setSelectedReview(review);
     setIsModalOpen(true);
   };
 
   const openEditReplyModal = (review, reply) => {
-    if (reply.user_id !== parseInt(currentUserId)) {
-      // Compare with the user_id from the API
+    if (!currentUserData) {
+      alert("User data is not available. Please try again.");
+      return;
+    }
+
+    if (reply.user_id !== currentUserData.id) {
       alert("You cannot edit this reply because you are not the author.");
       return;
     }
+
     setSelectedReview(review);
     setSelectedReply(reply);
     setIsReplyModalOpen(true);
@@ -397,7 +430,7 @@ const ReviewList = ({ id }) => {
                       review.replies.map((reply) => (
                         <div
                           key={reply.id}
-                          className="p-2 border rounded bg-gray-50 mt-2"
+                          className="p-2 border rounded bg-gray-50 mt-2 text-black"
                         >
                           <p>
                             <strong>{reply.user || "Anonymous"}</strong>:{" "}
@@ -443,6 +476,73 @@ const ReviewList = ({ id }) => {
           <p>No reviews yet.</p>
         )}
       </div>
+
+      {/* Modal for Editing Review */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Review</h3>
+            <textarea
+              defaultValue={selectedReview.content}
+              rows="4"
+              className="w-full border p-2 rounded text-black"
+              onChange={(e) =>
+                setSelectedReview({
+                  ...selectedReview,
+                  content: e.target.value,
+                })
+              }
+            />
+            <div className="flex items-center justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUpdateReview(selectedReview.content)}
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Editing Reply */}
+      {isReplyModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Edit Reply</h3>
+            <textarea
+              defaultValue={selectedReply.content}
+              rows="4"
+              className="w-full border p-2 rounded text-black"
+              onChange={(e) =>
+                setSelectedReply({ ...selectedReply, content: e.target.value })
+              }
+            />
+            <div className="flex items-center justify-end gap-4 mt-4">
+              <button
+                onClick={() => setIsReplyModalOpen(false)}
+                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() =>
+                  handleUpdateReply(selectedReply.review, selectedReply.content)
+                }
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

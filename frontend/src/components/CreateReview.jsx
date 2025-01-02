@@ -54,7 +54,7 @@ const ReviewForm = ({ googleBooksId, onReviewAdded }) => {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded text-black"
           placeholder="Write your review (optional)"
         />
       </div>

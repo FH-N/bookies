@@ -1,101 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const MyFollowersPage = () => {
-    const [users, setUsers] = useState([]);
-    const [followingStatus, setFollowingStatus] = useState({}); // Track follow/unfollow status for each user
-    const currentUserId = localStorage.getItem('user_id'); // Get the current user ID from localStorage
+  const [users, setUsers] = useState([]);
+  const [followingStatus, setFollowingStatus] = useState({}); // Track follow/unfollow status for each user
+  const currentUserId = localStorage.getItem("user_id"); // Get the current user ID from localStorage
 
-    useEffect(() => {
-        // Fetch authors from the API
-        //console.log('URL : ' + 'http://localhost:8000/api/allusers/?user_id=' + currentUserId  );
-        axios
-            .get(`http://localhost:8000/api/followers/${currentUserId}`)
-            .then((response) => {
-                setUsers(response.data);
-            })
-            .catch((error) => {
-                console.error('Error fetching authors:', error);
-            });
-    }, []);
+  useEffect(() => {
+    // Fetch followers from the API
+    axios
+      .get(`http://localhost:8000/api/followers/${currentUserId}`)
+      .then((response) => {
+        setUsers(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching followers:", error);
+      });
+  }, []);
 
-    // useEffect(() => {
-    //     // Fetch following status for the current user
-    //     axios
-    //         .get(`http://localhost:8000/api/followings/${currentUserId}`)
-    //         .then((response) => {
-    //             const followings = response.data; // List of followed user IDs
-    //             const status = {};
-    //             followings.forEach((follow) => {
-    //                 console.log("followed" + follow)
-    //                 status[follow.followed_user_id] = true;
-    //             });
-    //             setFollowingStatus(status);
-    //         })
-    //         .catch((error) => {
-    //             console.error('Error fetching followings:', error);
-    //         });
-    // }, [currentUserId]);
-
-    // const handleFollowToggle = (authorId) => {
-    //     const isFollowing = followingStatus[authorId];
-
-    //     if (isFollowing) {
-    //         // Unfollow API call
-    //         axios
-    //             .post('http://localhost:8000/api/unfollow/', {
-    //                 user_id: currentUserId,
-    //                 followed_user_id: authorId,
-    //             })
-    //             .then(() => {
-    //                 setFollowingStatus((prev) => ({ ...prev, [authorId]: false }));
-    //             })
-    //             .catch((error) => {
-    //                 console.error('Error unfollowing:', error);
-    //             });
-    //     } else {
-    //         // Follow API call
-    //         axios
-    //             .post('http://localhost:8000/api/follow/', {
-    //                 user_id: currentUserId,
-    //                 followed_user_id: authorId,
-    //             })
-    //             .then(() => {
-    //                 setFollowingStatus((prev) => ({ ...prev, [authorId]: true }));
-    //             })
-    //             .catch((error) => {
-    //                 console.log("author_id: " + authorId);
-    //                 console.error('Error following:', error);
-    //             });
-    //     }
-    // };
-
-    return (
-        <div style={{ margin: '20px' }}>
-            <h1 style={{ textAlign: 'left' }}>My Followers</h1>
-            <ul style={{ listStyleType: 'none', padding: 0 }}>
-                {users.map((user) => (
-                    <li
-                        key={user.followed_user_id}
-                        style={{
-                            marginBottom: '20px',
-                            padding: '10px',
-                            border: '1px solid #ccc',
-                            borderRadius: '5px',
-                            textAlign: 'left',
-                        }}
-                    >
-                        <p><strong>Username:</strong> {user.username}</p>
-                        <p><strong>Type:</strong> {user.role== 'User'? 'Booker' : 'Author'}</p>
-                        <p><strong>Email:</strong> {user.email || 'No email available'}</p>
-                        <p><strong>Bio:</strong> {user.bio || 'No bio available'}</p>
-         
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
+  return (
+    <div className="container mx-auto mt-8 px-4 w-full h-full min-h-screen font-poppins text-white">
+      <h1 className="text-2xl font-bold mb-6">My Followers</h1>
+      <ul className="space-y-4">
+        {users.map((user) => (
+          <li
+            key={user.followed_user_id}
+            className="p-4 border border-gray-300 rounded-lg shadow-sm"
+          >
+            <p className="text-lg font-semibold">
+              <span className="font-bold">Username:</span> {user.username}
+            </p>
+            <p className="">
+              <span className="font-bold">Type:</span>{" "}
+              {user.role === "User" ? "Booker" : "Author"}
+            </p>
+            <p className="">
+              <span className="font-bold">Email:</span>{" "}
+              {user.email || "No email available"}
+            </p>
+            <p className="">
+              <span className="font-bold">Bio:</span>{" "}
+              {user.bio || "No bio available"}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 export default MyFollowersPage;
-
