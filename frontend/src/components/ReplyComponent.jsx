@@ -28,7 +28,7 @@ const ReplyComponent = ({ reviewId, onReplyAdded }) => {
   return (
     <form onSubmit={handleReplySubmit} className="mt-4 space-y-2">
       <textarea
-        className="w-full p-2 border rounded"
+        className="w-full p-2 border rounded text-black"
         placeholder="Add a reply..."
         value={reply}
         onChange={(e) => setReply(e.target.value)}
