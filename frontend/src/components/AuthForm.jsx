@@ -36,7 +36,9 @@ const AuthForm = ({ route, method }) => {
 
     console.log("submit");
     try {
+      console.log("route: " + route);
       const res = await api.post(route, { username, password, email, role });
+      console.log("route: " + route);
       console.log(res);
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
@@ -60,6 +62,7 @@ const AuthForm = ({ route, method }) => {
     } catch (error) {
       console.error(error);
       if (error.response) {
+        console.log(error.response);
         switch (error.response.status) {
           case 401:
             setError("Invalid credentials.");

@@ -28,6 +28,7 @@ from django.contrib.auth import authenticate
 User = get_user_model()
 
 class UserCreate(generics.CreateAPIView):
+    #test
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
