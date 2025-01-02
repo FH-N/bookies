@@ -11,7 +11,9 @@ const BookClubPost = ({ post, clubId }) => {
   const [replies, setReplies] = useState(post.replies || []); // To track replies
   const [newReply, setNewReply] = useState(""); // To manage new reply content
 
-  const token = localStorage.getItem("access");
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
 
   // Fetch the current user's details
   const fetchCurrentUser = async () => {

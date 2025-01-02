@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, PostReply
-from .models import Review , User, ReviewReply, ReviewLike, ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, ReadingProgress
+from .models import *
 
 
 #User serializers
@@ -147,13 +146,13 @@ class BookClubPostSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
     created_at = serializers.ReadOnlyField()
     post_tags = PostTagSerializer(many=True, read_only=True)  # Add PostTagSerializer to include post tags
-    likes = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), many=True)  # Include likes
-    total_likes = serializers.ReadOnlyField()  # Add total likes as a read-only field
+    # likes = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), many=True)  # Include likes
+    # total_likes = serializers.ReadOnlyField()  # Add total likes as a read-only field
     replies = PostReplySerializer(many=True, read_only=True)  # Include replies using PostReplySerializer
 
     class Meta:
         model = BookClubPost
-        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags', 'likes', 'total_likes', 'replies']
+        fields = ['id', 'club', 'author', 'content', 'created_at', 'post_tags',  'replies']
 
 
 class ReadingProgressSerializer(serializers.ModelSerializer):
@@ -169,3 +168,26 @@ class ReadingProgressSerializer(serializers.ModelSerializer):
         if total_pages and total_pages > 0:
             return (obj.current_page / total_pages) * 100
         return 0.0
+    
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ['book_id', 'title', 'author', 'description', 'thumbnail']
+
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ['book_id', 'title', 'author', 'description', 'thumbnail']
+
+class BookshelfSerializer(serializers.ModelSerializer):
+    books = BookSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Bookshelf
+        fields = ['id', 'user', 'books']
+        
+class AddBookSerializer(serializers.Serializer):
+    book_id = serializers.CharField(required=True)
+

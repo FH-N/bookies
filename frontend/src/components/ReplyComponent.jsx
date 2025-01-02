@@ -4,6 +4,10 @@ import axios from "axios";
 const ReplyComponent = ({ reviewId, onReplyAdded }) => {
   const [reply, setReply] = useState("");
 
+  const token =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
+
   const handleReplySubmit = async (e) => {
     e.preventDefault();
     try {
@@ -11,7 +15,7 @@ const ReplyComponent = ({ reviewId, onReplyAdded }) => {
         `http://127.0.0.1:8000/api/reviews/${reviewId}/reply/`,
         { content: reply },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       onReplyAdded(response.data); // Notify parent to refresh replies

@@ -36,7 +36,9 @@ const CreateClub = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("access");
+    const token =
+      localStorage.getItem("access") ||
+      localStorage.getItem("google_access_token");
 
     if (!token) {
       alert("You must be logged in to create a book club.");

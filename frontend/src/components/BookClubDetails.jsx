@@ -15,9 +15,13 @@ const BookClubDetails = () => {
   const [userIsOwner, setUserIsOwner] = useState(false);
   const [isMember, setIsMember] = useState(false);
 
+  const accessToken =
+    localStorage.getItem("access") ||
+    localStorage.getItem("google_access_token");
+
   useEffect(() => {
     const fetchBookClubDetails = async () => {
-      const accessToken = localStorage.getItem("access"); // Assuming token is stored in localStorage
+      // Assuming token is stored in localStorage
       if (!accessToken) {
         setError("No access token found.");
         return;
@@ -82,8 +86,6 @@ const BookClubDetails = () => {
     );
     if (confirmDelete) {
       try {
-        const accessToken = localStorage.getItem("access");
-
         const response = await fetch(
           `http://127.0.0.1:8000/api/bookclubs/${id}/`,
           {
@@ -109,8 +111,6 @@ const BookClubDetails = () => {
 
   const handleUpdate = async () => {
     try {
-      const accessToken = localStorage.getItem("access");
-
       const response = await fetch(
         `http://127.0.0.1:8000/api/bookclubs/${id}/`,
         {
@@ -144,8 +144,6 @@ const BookClubDetails = () => {
     );
     if (confirmLeave) {
       try {
-        const accessToken = localStorage.getItem("access");
-
         const response = await fetch(
           `http://127.0.0.1:8000/api/bookclubs/leave/${id}/`,
           {

@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+import uuid
+from django.utils.timezone import now
+from .subject import Subject
+from .observer import NotificationObserver
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -97,19 +100,37 @@ class BookClubPost(models.Model):
     @property
     def total_likes(self):
         return self.likes.count()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        Subject.__init__(self)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new:
+            self.notify_observers()
+
+    def notify_observers(self):
+        message = f"New post in '{self.club.name}' by {self.author.username}: {self.title}"
+        for member in self.club.members.exclude(pk=self.author.pk):
+            observer = NotificationObserver(user=member)
+            self.attach(observer)
+        self.notify(message=message)
 
 
 class ClubPost(models.Model): 
     club = models.ForeignKey(BookClub, on_delete=models.CASCADE, related_name='clubpost_posts')
     content = models.TextField()
-    likes = models.ManyToManyField(User, related_name='liked_club_posts', blank=True)
+    # likes = models.ManyToManyField(User, related_name='liked_club_posts', blank=True)
 
     def __str__(self):
         return f"Post in {self.club.name}"
     
-    @property
-    def total_likes(self):
-        return self.likes.count()
+    # @property
+    # def total_likes(self):
+    #     return self.likes.count()
 
 
 class Followings(models.Model):
@@ -147,3 +168,31 @@ class PostReply(models.Model):
 
     def __str__(self):
         return f"Reply by {self.author.username} on post {self.post if self.post else self.club_post}"
+
+class Book(models.Model):
+    book_id = models.CharField(max_length=50, primary_key=True)
+    title = models.CharField(max_length=255)
+    author = models.CharField(max_length=255)
+    description = models.TextField()
+    thumbnail = models.URLField(max_length=1000)
+    
+    def __str__(self):
+        return self.title
+    
+
+class Bookshelf(models.Model):
+    bookshelf_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='bookshelf')
+    books = models.ManyToManyField(Book, related_name='bookshelves', blank=True)
+
+    def __str__(self):
+        return f"Bookshelf {self.bookshelf_id} of {self.user.username}"
+    
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"Notification for {self.user.username}"

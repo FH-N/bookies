@@ -3,6 +3,9 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from .models import BookClub, PostTag
 from rest_framework.exceptions import NotFound
+import django
+
+django.setup()
 
 class BookClubAPITestCase(APITestCase):
     def setUp(self):

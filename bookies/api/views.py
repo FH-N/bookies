@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 
 # Third-party imports
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework import generics, status
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
@@ -20,7 +20,7 @@ from allauth.socialaccount.models import SocialToken, SocialAccount
 import json
 
 # Local imports
-from .models import Review, ReviewReply,ReviewLike,ReviewDisLike, BookClub, BookClubPost, ClubTag, PostTag, Followings, UserProfile, ReadingProgress
+from .models import *
 from .serializers import *
 from .utils import get_book_total_pages 
 
@@ -930,6 +930,7 @@ class AuthorListView(APIView):
         return Response(author_list, status=status.HTTP_200_OK)
     
     
+
 class AllUsersListView(APIView):
     permission_classes = [AllowAny]
 
@@ -947,16 +948,24 @@ class AllUsersListView(APIView):
         # Exclude the user with the given user_id
         users = User.objects.exclude(id=excluded_user_id)
 
-        user_list = [
-            {
+        user_list = []
+        for user in users:
+            # Get related profile or set defaults if missing
+            try:
+                profile = user.profile
+                role = profile.role if profile else 'User'  # Fallback if profile is None
+                bio = profile.bio if profile else None  # Fallback if profile is None
+            except UserProfile.DoesNotExist:
+                role = 'User'  # Default role if profile does not exist
+                bio = None  # Default bio if profile does not exist
+
+            user_list.append({
                 "userid": user.id,
                 "username": user.username,
                 "email": user.email,
-                "role": getattr(user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
-                "bio": getattr(user.profile, 'bio', None),      # Get bio from UserProfile if available
-            }
-            for user in users
-        ]
+                "role": role,
+                "bio": bio,
+            })
 
         return Response(user_list, status=status.HTTP_200_OK)
 
@@ -1021,6 +1030,7 @@ class UnfollowAPIView(APIView):
     
 class FollowingsListView(APIView):
     permission_classes = [AllowAny]
+    
     def get(self, request, user_id):
         try:
             # Validate the current_user_id
@@ -1032,16 +1042,25 @@ class FollowingsListView(APIView):
         followings = Followings.objects.filter(user=user).select_related('followed_user')
 
         # Prepare the response data
-        following_list = [
-            {
-                "followed_user_id": following.followed_user.id,
-                "username": following.followed_user.username,
-                "email": following.followed_user.email,
-                "role": getattr(following.followed_user.profile, 'role', 'User'),  # Get role from UserProfile or default to 'User'
-                "bio": getattr(following.followed_user.profile, 'bio', None),      # Get bio from UserProfile if available
-            }
-            for following in followings
-        ]
+        following_list = []
+        for following in followings:
+            followed_user = following.followed_user
+            try:
+                # Attempt to get the profile data
+                role = followed_user.profile.role
+                bio = followed_user.profile.bio
+            except AttributeError:
+                # If profile is missing, use default values
+                role = 'User'
+                bio = None
+            
+            following_list.append({
+                "followed_user_id": followed_user.id,
+                "username": followed_user.username,
+                "email": followed_user.email,
+                "role": role,
+                "bio": bio,
+            })
 
         return Response(following_list, status=status.HTTP_200_OK)
     
@@ -1125,3 +1144,142 @@ class UserProgressView(APIView):
             progress_data.append(serializer.data)
 
         return Response(progress_data, status=status.HTTP_200_OK)
+
+
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
+from .models import Book
+import json
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+from django.http import JsonResponse, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from .models import Book
+import json
+from rest_framework import viewsets
+from .models import Book
+from .serializers import BookSerializer, AddBookSerializer
+
+###Book serializer to add book and used to retirve books from user bookshelf
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    
+    @action(detail=False, methods=['get'], url_path='all-books', permission_classes=[AllowAny])
+    def get_books(self, request):
+        # Retrieve all books
+        books = Book.objects.all()
+
+        # Serialize the books
+        data = [
+            {
+                'book_id': book.book_id,
+                'title': book.title,
+                'author': book.author,
+                'description': book.description,
+                'thumbnail': book.thumbnail if book.thumbnail else None,
+            } for book in books
+        ]
+
+        # Return the serialized data as a JSON response
+        return Response(data)
+
+from .models import Book, Bookshelf
+
+class BookshelfViewSet(viewsets.ModelViewSet):
+    queryset = Bookshelf.objects.all()
+    serializer_class = BookshelfSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['post'], url_path='add-book')
+    def add_book_to_bookshelf(self, request, pk=None):
+        logger.debug("Received request to add book to bookshelf")
+        logger.debug(f"Request data: {request.data}")
+        logger.debug(f"Request user: {request.user}")
+        
+        serializer = AddBookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book_id = serializer.validated_data['book_id']
+        user = request.user
+
+        # Get the book object
+        book = get_object_or_404(Book, book_id=book_id)
+
+        # Get or create the user's bookshelf
+        bookshelf, created = Bookshelf.objects.get_or_create(user=user)
+
+        # Add the book to the bookshelf
+        bookshelf.books.add(book)
+
+        # Return success response
+        return Response({'message': 'Book added to bookshelf successfully'}, status=201)
+
+    @action(detail=True, methods=['get'], url_path='mybooks')
+    def retrieve_books(self, request, pk=None):
+        try:
+            # Get the bookshelf for the logged-in user
+            bookshelf = get_object_or_404(Bookshelf.objects.filter(user=request.user))
+
+            # Get all books in the bookshelf
+            books = bookshelf.books.all()
+
+            # Serialize the books using BookSerializer
+            serialized_books = BookSerializer(books, many=True)
+
+            # Return the serialized book data
+            return Response(serialized_books.data, status=200)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+    @action(detail=False, methods=['post'], url_path='remove-book')
+    def remove_book_from_bookshelf(self, request, pk=None):
+        logger.debug("Received request to remove book from bookshelf")
+        logger.debug(f"Request data: {request.data}")
+        logger.debug(f"Request user: {request.user}")
+
+        # Validate input data
+        serializer = AddBookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book_id = serializer.validated_data['book_id']
+        user = request.user
+
+        # Get the book object
+        book = get_object_or_404(Book, book_id=book_id)
+
+        # Get the user's bookshelf
+        bookshelf = get_object_or_404(Bookshelf.objects.filter(user=user))
+
+        # Check if the book is in the user's bookshelf
+        if book not in bookshelf.books.all():
+            return Response({'message': 'Book not found in your bookshelf'}, status=404)
+
+        # Remove the book from the bookshelf
+        bookshelf.books.remove(book)
+
+        # Return success response
+        return Response({'message': 'Book removed from bookshelf successfully'}, status=200)
+    
+
+# views.py
+from django.http import JsonResponse
+from .models import Notification
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def get_notifications(request):
+    notifications = request.user.notifications.filter(is_read=False)
+    data = [
+        {
+            "id": notification.id,
+            "message": notification.message,
+            "timestamp": notification.timestamp,
+        }
+        for notification in notifications
+    ]
+    return JsonResponse({"notifications": data})
