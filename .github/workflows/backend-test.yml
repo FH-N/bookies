@@ -33,4 +33,4 @@ jobs:
           cd bookies 
           python manage.py makemigrations --check
           python manage.py migrate
-          pytest --cov=api api/tests.py
+          python manage.py test api.tests
